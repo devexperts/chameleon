@@ -1,0 +1,59 @@
+<!--
+ * #%L
+ * Chameleon. Color Palette Management Tool
+ * %%
+ * Copyright (C) 2016 - 2017 Devexperts, LLC
+ * %%
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public
+ * License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/gpl-3.0.html>.
+ * #L%
+-->
+
+<div class="modal-header">
+	<h3 class="modal-title" id="select-palettes-modal-title">Select palettes</h3>
+</div>
+<div class="modal-body" id="select-palettes-modal-body">
+	<div ng-repeat="palette in $controller.palettes">
+		<div ng-mouseover="$controller.hoverIn($index)" ng-mouseleave="$controller.hoverOut($index)">
+			<input
+					type="checkbox"
+					value="{{palette.name}}"
+					ng-checked="$controller.isSelectedPalette(palette)"
+					ng-click="$controller.toggleSelection(palette)"
+					title="id={{palette.id}}"
+			>
+			<label>{{palette.name}}</label>
+			<span style="float:right;">
+			<a ng-show="$controller.hover[$index]" href="" popover-trigger="'outsideClick'" popover-is-open="$controller.copyDialogIsOpen[$index]" popover-placement="bottom"
+			   uib-popover-template="'templates/popup/selectSourcePalette.html'" popover-title="Select Source Palette">
+				<i class="glyphicon glyphicon-share-alt gly-rotate-270-flip-vertical"></i>
+				Replace By
+			</a>&nbsp;
+			<a ng-show="$controller.hover[$index]" href="" class="header-with-padding-right" ng-click="$controller.selectCommits(palette.id, palette.name)">
+				<i class="glyphicon glyphicon-retweet"></i>
+                Show diff
+            </a>
+			</span>
+		</div>
+	</div>
+</div>
+<div class="modal-error-message" ng-show="$controller.errorMessage.length">
+	<div>
+		{{$controller.errorMessage}}
+	</div>
+</div>
+<div class="modal-footer">
+	<button class="btn btn-default" type="button" ng-click="$controller.cancel()">Cancel</button>
+	<button class="btn btn-info" type="button" ng-click="$controller.ok()">Select</button>
+</div>

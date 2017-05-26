@@ -1,0 +1,64 @@
+buildscript {
+	ext {
+		springBootVersion = '1.5.2.RELEASE'
+	}
+	repositories {
+		mavenCentral()
+		maven {
+			url 'https://plugins.gradle.org/m2/'
+		}
+		maven {
+			url "http://repository.jboss.org/nexus/content/groups/public/"
+		}
+		jcenter()
+	}
+	dependencies {
+		classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+		classpath 'org.liquibase:liquibase-core:3.5.3'
+		classpath 'net.researchgate:gradle-release:2.4.0'
+		classpath 'org.hibernate.build.gradle:gradle-maven-publish-auth:2.0.1'
+		classpath "gradle.plugin.com.github.jk1:gradle-license-report:0.3.11"
+		classpath('org.liquibase:liquibase-gradle-plugin:1.2.4'){
+			exclude(module: 'liquibase-core')
+		}
+	}
+}
+
+apply plugin: 'java'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'net.researchgate.release'
+apply plugin: 'maven-publish'
+apply plugin: 'maven-publish-auth'
+apply plugin: "com.github.jk1.dependency-license-report"
+
+apply from: 'liquibase.gradle'
+apply from: 'publishing.gradle'
+
+springBoot {
+	executable = true
+}
+
+repositories {
+	mavenLocal()
+	mavenCentral()
+}
+
+dependencies {
+	compile "org.springframework.boot:spring-boot-starter-actuator"
+	compile 'org.springframework.boot:spring-boot-starter-data-jpa'
+	compile 'org.springframework.boot:spring-boot-starter-data-rest'
+	compile 'org.springframework.boot:spring-boot-starter-web'
+	compile 'org.springframework.boot:spring-boot-devtools'
+	compile 'org.webjars.bower:angularjs:1.6.3'
+	compile 'org.webjars.bower:angular-route:1.6.3'
+	compile 'org.webjars.bower:angular-animate:1.6.3'
+	compile 'org.webjars.bower:angular-sanitize:1.6.3'
+	compile 'org.webjars.bower:angular-bootstrap:2.5.0'
+	compile 'org.webjars:bootstrap:3.3.7'
+	compile 'com.h2database:h2:1.4.195'
+	compile 'io.springfox:springfox-swagger2:2.6.1'
+	compile 'io.springfox:springfox-swagger-ui:2.6.1'
+	compile 'org.jsoup:jsoup:1.10.2'
+	testCompile 'org.springframework.boot:spring-boot-starter-test'
+	testCompile 'junit:junit:4.12'
+}

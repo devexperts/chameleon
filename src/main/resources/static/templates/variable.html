@@ -1,0 +1,84 @@
+<!--
+ * #%L
+ * Chameleon. Color Palette Management Tool
+ * %%
+ * Copyright (C) 2016 - 2017 Devexperts, LLC
+ * %%
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public
+ * License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/gpl-3.0.html>.
+ * #L%
+-->
+
+<div class="modal-header">
+	<h3 class="modal-title" id="variable-modal-title">{{$controller.dialogTitle}}</h3>
+</div>
+<div class="modal-body" id="variable-modal-body">
+	<div class="form-group row">
+		<div class="col-xs-6">
+			<label for="variableInputName" class="h4 small">Variable name</label>
+			<input type="text" class="form-control" id="variableInputName" ng-model="$controller.view.variable.name" ng-blur="$controller.checkVariableName()">
+		</div>
+		<div class="col-xs-6">
+			<label for="variableInputUsage" class="h4 small">Usage</label>
+			<input type="text" class="form-control" id="variableInputUsage" ng-model="$controller.view.variable.usage">
+		</div>
+	</div>
+
+	<table class="table table-condensed blue">
+		<tr>
+			<th class="fixed-column-variable-width">Palette</th>
+			<th class="fixed-column-usage-width">Color</th>
+		</tr>
+		<tr ng-repeat="palette in $controller.view.palettes" ng-init="snapshot = $controller.getSnapshot(palette.id)">
+			<td>{{palette.name}}</td>
+			<td>
+				<div class="fixed-column-width">
+					<div class="row no-gutter">
+						<div class="col-xs-4" id="snapshot_color_{{snapshot.variableId}}_{{snapshot.paletteId}}" id="snapshot_color_{{snapshot.variableId}}_{{snapshot.paletteId}}">
+							<input type="text" class="form-control" placeholder="Not set" ng-model="snapshot.color">
+						</div>
+						<div class="col-xs-4">
+							<div class="input-group" id="snapshot_opacity_{{snapshot.variableId}}_{{snapshot.paletteId}}" id="snapshot_opacity_{{snapshot.variableId}}_{{snapshot.paletteId}}">
+								<input type="number" class="form-control" ng-model="snapshot.opacity" ng-disabled="!snapshot.color">
+								<div class="input-group-addon">%</div>
+							</div>
+						</div>
+
+						<div class="col-xs-1 color-container" ng-show="snapshot.color">
+							<!--New line make space between elements, don't do it-->
+							<div class="color-block" style="background:#{{snapshot.color}}; border-right: 1px solid #E6E6E6;" ></div><div class="color-block" style="background:#{{snapshot.color}}; opacity: {{(snapshot.opacity === null || snapshot.opacity === 0) ? 1 : snapshot.opacity / 100}};"></div>
+						</div>
+
+						<i class="glyphicon glyphicon-fire big-glyph" ng-show="snapshot.color"></i>
+					</div>
+				</div>
+			</td>
+		</tr>
+	</table>
+
+</div>
+<div class="modal-error-message" ng-show="$controller.errorMessage.length">
+	<div>
+		{{$controller.errorMessage}}
+	</div>
+</div>
+<div class="modal-footer">
+	<div class="pull-left" ng-if="$controller.view.variable.id">
+		<button class="btn btn-danger" type="button" ng-click="$controller.delete()">Delete</button>
+	</div>
+	<div class="pull-right">
+		<button class="btn btn-default" type="button" ng-click="$controller.cancel()">Cancel</button>
+		<button class="btn btn-info" type="button" ng-click="$controller.ok()">{{$controller.okButtonTitle}}</button>
+	</div>
+</div>

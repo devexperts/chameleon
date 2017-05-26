@@ -1,0 +1,119 @@
+/*-
+ * #%L
+ * Chameleon. Color Palette Management Tool
+ * %%
+ * Copyright (C) 2016 - 2017 Devexperts, LLC
+ * %%
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public
+ * License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/gpl-3.0.html>.
+ * #L%
+ */
+
+.header-with-padding-right {
+    padding-right: 30px;
+}
+
+th {
+    background-color: #f8f8f8 !important;
+}
+
+.modal-error-message {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #e8b8b8;
+    min-height: 46px;
+}
+
+.color-block {
+    width:40px;
+    height:34px;
+    display: inline-block;
+    margin: 0;
+}
+
+
+.label-as-badge {
+    border-radius: 1em;
+}
+
+.col-xs-1.color-container {
+    padding-left: 0;
+    padding-right: 0;
+    margin-left: 0;
+    margin-right: 0;
+    width: 82px;
+    height: 36px;
+    border: 1px solid #E6E6E6;
+    border-radius: 3px;
+    background-image: url("../images/transparent.png");
+}
+
+.col-xs-1.input-group {
+    float: left;
+}
+
+.row.no-gutter {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.row.no-gutter [class*='col-']:not(:first-child),
+.row.no-gutter [class*='col-']:not(:last-child) {
+    padding-left: 0;
+}
+
+.fixed-column-width {
+    width: 350px;
+}
+
+.popover{
+    z-index:10;
+}
+
+.select-source-palette-dialog {
+    width: 200px;
+}
+
+.select-source-palette {
+    width: 200px;
+}
+
+.gly-rotate-270-flip-vertical {
+    filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=3, mirror=1);
+    -webkit-transform: scale(1, -1) rotate(270deg);
+    -moz-transform: scale(1, -1) rotate(270deg);
+    -ms-transform: scale(1, -1) rotate(270deg);
+    -o-transform: scale(1, -1) rotate(270deg);
+    transform: scale(1, -1) rotate(270deg);
+}
+
+.fixed-column-usage-width {
+    width: 200px;
+}
+
+.fixed-column-variable-width {
+    min-width: 100px;
+    max-width: none;
+}
+
+.big-glyph {
+    padding-left: 8px;
+    padding-top: 8px;
+    -webkit-transform: scale(1.5, 1.5);
+    -moz-transform: scale(1.5, 1.5);
+    -ms-transform: scale(1.5, 1.5);
+    -o-transform: scale(1.5, 1.5);
+    transform: scale(1.5, 1.5);
+}

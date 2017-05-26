@@ -1,0 +1,50 @@
+apply plugin: 'net.researchgate.release'
+apply plugin: 'maven-publish'
+apply plugin: 'maven-publish-auth'
+
+def snapshopRepositoryUrl = 'https://maven.in.devexperts.com/content/repositories/uxdesign-snapshot'
+def releaseRepositoryUrl = 'https://maven.in.devexperts.com/content/repositories/uxdesign'
+group = 'com.devexperts'
+
+publishToMavenLocal {
+	dependsOn assemble
+}
+
+publish {
+	dependsOn assemble
+}
+
+afterReleaseBuild{
+	dependsOn publish
+}
+
+publishing {
+	publications {
+		maven(MavenPublication) {
+			artifactId = 'chameleon'
+			from components.java
+		}
+	}
+
+	repositories {
+		maven {
+			name "${repositoryId}"
+			if(project.version.endsWith('-SNAPSHOT')) {
+				url snapshopRepositoryUrl
+			} else {
+				url releaseRepositoryUrl
+			}
+		}
+	}
+}
+
+release {
+	failOnPublishNeeded = false
+	failOnUpdateNeeded = false
+}
+
+if (project.version.endsWith('-SNAPSHOT')) {
+	jar.archiveName="chameleon-snapshot.jar"
+} else {
+	jar.archiveName="chameleon-release.jar"
+}

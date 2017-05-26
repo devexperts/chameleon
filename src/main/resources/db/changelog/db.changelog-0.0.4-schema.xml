@@ -1,0 +1,40 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+    <changeSet author="devexperts" id="1494941136308-1">
+        <createTable tableName="commit">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints primaryKey="true" primaryKeyName="commitPK"/>
+            </column>
+            <column name="version" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="message" type="VARCHAR(255)"/>
+            <column name="update_time" type="TIMESTAMP"/>
+            <column name="palette_id" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="devexperts" id="1494941136308-3">
+        <addColumn tableName="variable_snapshot">
+            <column name="commit_id" type="bigint"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="devexperts" id="1494941136308-6">
+        <addForeignKeyConstraint baseColumnNames="palette_id" baseTableName="commit" constraintName="FK46vcp4a1dj7xynl67j7yetsfr" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="palette"/>
+    </changeSet>
+    <changeSet author="devexperts" id="1494941136308-8">
+        <addForeignKeyConstraint baseColumnNames="commit_id" baseTableName="variable_snapshot" constraintName="FKhv48xcy6og9dor8ub3nyb185b" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="commit"/>
+    </changeSet>
+    <changeSet author="devexperts" id="1494941136308-12">
+        <dropColumn columnName="COMMIT" tableName="VARIABLE_SNAPSHOT"/>
+    </changeSet>
+    <changeSet author="devexperts" id="1495002082697-4">
+        <createIndex indexName="update_time_idx" tableName="commit">
+            <column name="update_time"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="devexperts" id="1495002082697-16">
+        <createIndex indexName="commit_id_idx" tableName="variable_snapshot">
+            <column name="commit_id"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

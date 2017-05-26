@@ -1,0 +1,118 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+				   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+    <changeSet author="devexperts" id="1492533083208-1" >
+        <createTable tableName="Product">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints primaryKey="true" primaryKeyName="ProductPK"/>
+            </column>
+            <column name="version" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="devexperts" id="1492533083208-2">
+        <createTable tableName="Product_UIComponent">
+            <column name="Product_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="uiComponents_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="devexperts" id="1492533083208-3">
+        <createTable tableName="UIComponent">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints primaryKey="true" primaryKeyName="UIComponentPK"/>
+            </column>
+            <column name="version" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="color" type="VARCHAR(6)"/>
+            <column name="name" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="devexperts" id="1492533083208-4">
+        <addPrimaryKey columnNames="Product_id, uiComponents_id" tableName="Product_UIComponent"/>
+    </changeSet>
+    <changeSet author="devexperts" id="1492533083208-5">
+        <addUniqueConstraint columnNames="name" constraintName="UC_UICOMPONENTNAME_COL" tableName="UIComponent"/>
+    </changeSet>
+    <changeSet author="devexperts" id="1492533083208-6">
+        <addForeignKeyConstraint baseColumnNames="Product_id" baseTableName="Product_UIComponent" constraintName="FKbnlbb0arm6vpyos4jhc9qmcij" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="Product"/>
+    </changeSet>
+    <changeSet author="devexperts" id="1492533083208-7">
+        <addForeignKeyConstraint baseColumnNames="uiComponents_id" baseTableName="Product_UIComponent" constraintName="FKganx2tq7o6x8fihh3uocn94ui" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="UIComponent"/>
+    </changeSet>
+    <changeSet author="devexperts" id="1492765663707-1">
+        <createTable tableName="Palette">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints primaryKey="true" primaryKeyName="PalettePK"/>
+            </column>
+            <column name="version" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="devexperts" id="1492765663707-2">
+        <addUniqueConstraint columnNames="name" constraintName="UC_PALETTENAME_COL" tableName="Palette"/>
+    </changeSet>
+    <changeSet author="devexperts" id="1493116201026-1">
+        <createTable tableName="Variable">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints primaryKey="true" primaryKeyName="VariablePK"/>
+            </column>
+            <column name="version" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)"/>
+            <column name="usage" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="devexperts" id="1493116201026-2">
+        <createTable tableName="variable_snapshot">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints primaryKey="true" primaryKeyName="variable_snapshotPK"/>
+            </column>
+            <column name="version" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="color" type="VARCHAR(255)"/>
+            <column name="commit" type="BIGINT"/>
+            <column name="opacity" type="FLOAT"/>
+            <column name="update_time" type="TIMESTAMP"/>
+            <column name="palette_id" type="BIGINT"/>
+            <column name="variable_id" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="devexperts" id="1493116201026-3">
+        <addUniqueConstraint columnNames="name" constraintName="UC_VARIABLENAME_COL" tableName="Variable"/>
+    </changeSet>
+    <changeSet author="devexperts" id="1493116201026-4">
+        <addForeignKeyConstraint baseColumnNames="palette_id" baseTableName="variable_snapshot" constraintName="FKct0mfyowys0vfwfbl60sy9aiy" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="Palette"/>
+    </changeSet>
+    <changeSet author="devexperts" id="1493116201026-5">
+        <addForeignKeyConstraint baseColumnNames="variable_id" baseTableName="variable_snapshot" constraintName="FKhyqh9lik3vaqk4c7fakgkqdhv" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="Variable"/>
+    </changeSet>
+    <changeSet author="devexperts" id="1493116201026-6">
+        <addNotNullConstraint  tableName="Product"  columnName="name" columnDataType="VARCHAR(255)"/>
+    </changeSet>
+    <changeSet author="devexperts" id="1493116201026-7">
+        <addNotNullConstraint  tableName="Palette"  columnName="name" columnDataType="VARCHAR(255)"/>
+    </changeSet>
+    <changeSet author="devexperts" id="1493116201026-8">
+        <addNotNullConstraint  tableName="UIComponent"  columnName="name" columnDataType="VARCHAR(255)"/>
+    </changeSet>
+    <changeSet author="devexperts" id="1493116201026-9">
+        <addNotNullConstraint  tableName="Variable"  columnName="name" columnDataType="VARCHAR(255)"/>
+    </changeSet>
+    <changeSet author="devexperts" id="1493116201026-12">
+        <modifyDataType tableName="variable_snapshot"  columnName="opacity"  newDataType="DECIMAL(5, 2)"/>
+    </changeSet>
+    <changeSet author="devexperts" id="1493116201026-13">
+        <modifyDataType tableName="variable_snapshot"  columnName="opacity"  newDataType="DECIMAL(7, 4)"/>
+    </changeSet>
+</databaseChangeLog>

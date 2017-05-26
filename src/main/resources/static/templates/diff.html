@@ -1,0 +1,67 @@
+<!--
+ * #%L
+ * Chameleon. Color Palette Management Tool
+ * %%
+ * Copyright (C) 2016 - 2017 Devexperts, LLC
+ * %%
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public
+ * License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/gpl-3.0.html>.
+ * #L%
+-->
+
+<div class="row" ng-controller="DiffController as controller">
+	<div class="form-group col-xs-12">
+		<h3>
+			<span class="header-with-padding-right">Diff for palette: {{controller.model.paletteName}}</span>
+		</h3>
+		<div>
+			<div uib-alert dismiss-on-timeout="10000" ng-repeat="alert in controller.alerts" ng-class="'alert-' + (alert.type || 'warning')" close="controller.closeAlert($index)">{{alert.msg}}</div>
+			<table class="table table-condensed blue">
+				<tr>
+					<th class="fixed-column-variable-width">Variable Name</th>
+					<th class="fixed-column-usage-width">Usage</th>
+					<th ng-repeat="commit in controller.model.commitsView.columns">
+						Date: {{commit.updateTime}} Version:{{commit.id}}
+					</th>
+				</tr>
+				<tr ng-repeat="row in controller.model.commitsView.rows">
+					<td><a href="" class="header-with-padding-right" ng-click="controller.showVariable(row.variable)">
+						{{row.variable.name}}
+					</a></td>
+					<td>{{row.variable.usage}}</td>
+					<td ng-repeat="snapshot in row.snapshots">
+						<div class="fixed-column-width">
+							<div class="row no-gutter">
+								<div class="col-xs-4" id="snapshot_color_{{snapshot.variableId}}_{{snapshot.paletteId}}">
+									<input type="text" class="form-control" ng-model="snapshot.color" placeholder="Not set">
+								</div>
+								<div class="col-xs-4">
+									<div class="input-group">
+										<input type="number" class="form-control" ng-model="snapshot.opacity" ng-disabled="!snapshot.color" >
+										<div class="input-group-addon">%</div>
+									</div>
+								</div>
+
+								<div class="col-xs-1 color-container" ng-show="snapshot.color">
+									<!--New line make space between elements, don't do it-->
+									<div class="color-block" style="background:#{{snapshot.color}}; border-right: 1px solid #E6E6E6;" ></div><div class="color-block" style="background:#{{snapshot.color}}; opacity: {{(snapshot.opacity === null || snapshot.opacity === 0) ? 1 : snapshot.opacity / 100}};"></div>
+								</div>
+							</div>
+						</div>
+					</td>
+				</tr>
+			</table>
+		</div>
+	</div>
+</div>
