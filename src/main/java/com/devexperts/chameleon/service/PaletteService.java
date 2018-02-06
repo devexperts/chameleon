@@ -4,7 +4,7 @@ package com.devexperts.chameleon.service;
  * #%L
  * Chameleon. Color Palette Management Tool
  * %%
- * Copyright (C) 2016 - 2017 Devexperts, LLC
+ * Copyright (C) 2016 - 2018 Devexperts, LLC
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -34,18 +34,26 @@ import com.devexperts.chameleon.dto.SaveVariableDTO;
 import com.devexperts.chameleon.dto.VariableDTO;
 import com.devexperts.chameleon.dto.VariableSnapshotDTO;
 import com.devexperts.chameleon.entity.PaletteEntity;
+import com.devexperts.chameleon.entity.VariableSnapshotEntity;
 import com.devexperts.chameleon.exception.EntityNotFoundCustomException;
 import com.devexperts.chameleon.repository.PaletteRepository;
+import com.devexperts.chameleon.repository.VariableRepository;
+import com.devexperts.chameleon.repository.VariableSnapshotRepository;
 import com.devexperts.chameleon.util.PreconditionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Stream;
 
 import static com.devexperts.chameleon.util.ConverterUtils.opacityToPercent;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 
 /**
  * This class is used as service for handle actions with palette
@@ -61,23 +69,31 @@ public class PaletteService {
 
     private final CommitViewCellConverter commitViewCellConverter;
 
+    private final VariableSnapshotRepository variableSnapshotRepository;
+
     private final CommitService commitService;
 
     @Autowired
     public PaletteService(PaletteRepository repository,
                           PaletteViewCellConverter viewCellConverter,
                           CommitViewCellConverter commitViewCellConverter,
+                          VariableSnapshotRepository variableSnapshotRepository,
                           CommitService commitService) {
         this.repository = repository;
         this.viewCellConverter = viewCellConverter;
         this.commitViewCellConverter = commitViewCellConverter;
+        this.variableSnapshotRepository = variableSnapshotRepository;
         this.commitService = commitService;
     }
 
     public List<PaletteDTO> findAll() {
-        List<PaletteEntity> entities = repository.findAllByOrderByNameAsc();
+        List<PaletteEntity> entities = repository.findAllByActiveTrueOrderByNameAsc();
         PreconditionUtils.checkIsAnyNotNull(entities);
         return convertToDTO(entities);
+    }
+
+    public void delete(Long id) {
+        repository.delete(id);
     }
 
     public PaletteDTO getById(Long id) {
@@ -89,7 +105,7 @@ public class PaletteService {
     }
 
     public List<PaletteEntity> getByIds(List<Long> ids) {
-        List<PaletteEntity> entities = repository.findAllByIdIn(ids);
+        List<PaletteEntity> entities = repository.findAllByIdInAndActiveTrue(ids);
         checkIsAnyEntityNotFound(ids, entities);
 
         return entities;
@@ -102,17 +118,22 @@ public class PaletteService {
     }
 
     public PaletteEntity getPalette(String name) {
-        PaletteEntity entity = repository.findFirstByNameIgnoreCase(name);
+        PaletteEntity entity = repository.findFirstByActiveTrueAndNameIgnoreCase(name);
         PreconditionUtils.checkNotFound(entity, name);
         return entity;
     }
 
     public boolean isNameExist(String name) {
-        return repository.findFirstByNameIgnoreCase(name) != null;
+        return repository.findFirstByActiveTrueAndNameIgnoreCase(name) != null;
     }
 
     public Long save(PaletteDTO dto) {
-        return repository.save(convertToEntity(dto)).getId();
+        PaletteEntity allByName = repository.findAllByName(dto.getName());
+        if (Objects.isNull(allByName)) {
+            return repository.save(convertToEntity(dto)).getId();
+        } else {
+            return null;
+        }
     }
 
     public PaletteEntity convertToEntity(PaletteDTO dto) {
@@ -132,28 +153,112 @@ public class PaletteService {
     public List<PaletteEntity> convertToEntity(List<PaletteDTO> dto) {
         return dto.stream()
                 .map(this::convertToEntity).
-                        collect(Collectors.toList());
+                        collect(toList());
     }
 
     public PaletteViewDTO buildVariableView(List<Long> paletteIds) {
-
-        List<Long> lastCommitIds = commitService.getLastCommitIdsByPaletteIds(paletteIds);
-
-        List<PaletteViewCellDTO> cells = repository.getPaletteVariableView(paletteIds, lastCommitIds).stream()
-                .map(viewCellConverter::convert)
-                .collect(Collectors.toList());
-
+        List<PaletteViewCellDTO> cells = getUnsortedCells(paletteIds);
+        cells.sort(Comparator.comparing(PaletteViewCellDTO::getVariableName).thenComparing(PaletteViewCellDTO::getPaletteName));
         return new PaletteViewDTO(
                 getPaletteViewColumns(paletteIds.size(), cells),
                 getPaletteViewRows(paletteIds.size(), cells)
         );
     }
 
+    /**
+     * Method which replace getPaletteVariableViewMethod.
+     *
+     * First of all we gets all unique variables from snapshots. Then we are cross-join this variables with palettes.
+     * It is necessary because if palette doesn't have variable which exists in list it must be set on empty
+     * (with color and opacity equal to null).
+     * After this action we have collection of (variableId, paletteId) which is already fully constructed table of:
+     *             | palette1  | palette2  | palette3
+     *    ----------+------------+------------+----------
+     *    variable1 |           |          |
+     *    variable2 |           |          |
+     *
+     * So, rawCrossJoinedCellsStream - it is that collection.
+     *
+     * Then, we gets snapshots for this table. And in the end we are merging first empty collection with contented
+     * snapshots.
+     *
+     * In the end we gets:
+     *
+     *              | palette1  | palette2  | palette3
+     *    ----------+------------+------------+----------
+     *    variable1 | snapshot1 | snapshot2 | snapshot3
+     *    variable2 | snapshot4 | snapshot5 | snapshot6
+     *
+     * Note: final collection is not sorted as we need!
+     *
+     * @see PaletteRepository
+     * @param paletteIds
+     * @return unsorted list of all cells.
+     */
+
+    public List<PaletteViewCellDTO> getUnsortedCells(List<Long> paletteIds) {
+        List<Long> lastCommitIds = commitService.getLastCommitIdsByPaletteIds(paletteIds);
+
+        List<PaletteEntity> palettes = repository.findAllByIdInAndActiveTrue(paletteIds);
+
+        List<VariableSnapshotEntity> snapshots = variableSnapshotRepository.findAllByCommitEntityIdIn(lastCommitIds);
+
+        Stream<PaletteViewCellDTO> snapshotCellsStream = snapshots.stream().map(this::mapSnapshotOnCell);
+        Stream<PaletteViewCellDTO> rawCrossJoinedCellsStream = palettes.stream()
+                .flatMap(palette ->
+                        snapshots.stream()
+                                .map(VariableSnapshotEntity::getVariableEntity)
+                                .distinct()
+                                .map(variable ->
+                                        PaletteViewCellDTO
+                                                .builder()
+                                                .variableId(variable.getId())
+                                                .paletteId(palette.getId())
+                                                .paletteName(palette.getName())
+                                                .variableName(variable.getName())
+                                                .variableUsage(variable.getUsage())
+                                                .build()));
+
+        Map<SnapshotId, PaletteViewCellDTO> mergedMapOfConstructedAndEmptyCells = Stream.concat(snapshotCellsStream, rawCrossJoinedCellsStream)
+                .collect(toMap(this::mapCellOnId, v -> v, (firstCell, secondCell) ->
+                        firstCell.getVariableSnapshotId() != null ? firstCell : secondCell));
+
+        return new ArrayList<>(mergedMapOfConstructedAndEmptyCells.values());
+    }
+
+    private PaletteViewCellDTO mapSnapshotOnCell(VariableSnapshotEntity snapshot) {
+        return PaletteViewCellDTO
+                .builder()
+                .variableId(snapshot.getVariableEntity().getId())
+                .paletteId(snapshot.getPaletteEntity().getId())
+                .paletteName(snapshot.getPaletteEntity().getName())
+                .color(snapshot.getColor())
+                .opacity(snapshot.getOpacity())
+                .variableUsage(snapshot.getVariableEntity().getUsage())
+                .variableName(snapshot.getVariableEntity().getName())
+                .variableSnapshotId(snapshot.getId())
+                .build();
+    }
+
+    private SnapshotId mapCellOnId(PaletteViewCellDTO snapshot) {
+        return new SnapshotId(
+                snapshot.getVariableId(),
+                snapshot.getPaletteId()
+        );
+    }
+
+    public void setPaletteNotActive(long id) {
+        PaletteEntity one = repository.getOne(id);
+        if (Objects.nonNull(one)) {
+            one.setActive(false);
+        }
+    }
+
     public PaletteDiffViewDTO buildDiffView(List<Long> selectedCommitIds, List<Long> diffVariableId) {
 
         List<CommitViewCellDTO> cells = repository.getPaletteDiffView(selectedCommitIds, diffVariableId).stream()
                 .map(commitViewCellConverter::convert)
-                .collect(Collectors.toList());
+                .collect(toList());
 
         checkAndChangeFromToDirection(selectedCommitIds, cells);
 
@@ -175,7 +280,7 @@ public class PaletteService {
     private void checkIsAnyEntityNotFound(List<Long> ids, List<PaletteEntity> entities) {
         List<Long> entityIds = entities.stream()
                 .map(e -> e.getId())
-                .collect(Collectors.toList());
+                .collect(toList());
 
         List<Long> notFoundIds = new ArrayList<>();
         notFoundIds.addAll(ids);
@@ -245,14 +350,14 @@ public class PaletteService {
         return cells.stream()
                 .limit(columnCount)
                 .map(cell -> new PaletteDTO(cell.getPaletteId(), cell.getPaletteName()))
-                .collect(Collectors.toList());
+                .collect(toList());
     }
 
     private List<CommitDTO> getCommitViewColumns(int columnCount, List<CommitViewCellDTO> cells) {
         return cells.stream()
                 .limit(columnCount)
                 .map(cell -> new CommitDTO(cell.getCommitId(), cell.getPaletteId(), cell.getUpdateTime()))
-                .collect(Collectors.toList());
+                .collect(toList());
     }
 
     private PaletteDTO convertToDTO(PaletteEntity entity) {
@@ -262,6 +367,32 @@ public class PaletteService {
     private List<PaletteDTO> convertToDTO(List<PaletteEntity> entities) {
         return entities.stream()
                 .map(this::convertToDTO).
-                        collect(Collectors.toList());
+                        collect(toList());
     }
+
+    private class SnapshotId {
+
+        private Long variableId;
+        private Long paletteId;
+
+        public SnapshotId(Long variableId, Long paletteId) {
+            this.variableId = variableId;
+            this.paletteId = paletteId;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (getClass() != o.getClass()) return false;
+            SnapshotId that = (SnapshotId) o;
+            return Objects.equals(variableId, that.variableId) &&
+                    Objects.equals(paletteId, that.paletteId);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(variableId, paletteId);
+        }
+    }
+
 }

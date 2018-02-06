@@ -63,7 +63,7 @@ Licensing
 
 Chameleon.
 
-Copyright (C) 2016-2017 Devexperts LLC
+Copyright (C) 2016-2018 Devexperts LLC
 
 This product is developed at Devexperts LLC (http://devexperts.com/).
 Licensed under the GNU General Public License, Version 3.

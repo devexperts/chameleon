@@ -4,7 +4,7 @@ package com.devexperts.chameleon.service;
  * #%L
  * Chameleon. Color Palette Management Tool
  * %%
- * Copyright (C) 2016 - 2017 Devexperts, LLC
+ * Copyright (C) 2016 - 2018 Devexperts, LLC
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -100,7 +100,7 @@ public class VariableService {
         return entity;
     }
 
-    private VariableDTO convertToDTO(VariableEntity entity) {
+    public VariableDTO convertToDTO(VariableEntity entity) {
         return new VariableDTO(entity.getId(), entity.getName(), entity.getUsage());
     }
 

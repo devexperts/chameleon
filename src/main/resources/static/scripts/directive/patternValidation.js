@@ -1,6 +1,4 @@
-package com.devexperts.chameleon;
-
-/*-
+/*
  * #%L
  * Chameleon. Color Palette Management Tool
  * %%
@@ -22,18 +20,16 @@ package com.devexperts.chameleon;
  * #L%
  */
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-
-/**
- * SpringBoot entry point application
- *
- */
-@SpringBootApplication
-public class ChameleonApplication {
-
-	public static void main(String[] args) {
-		SpringApplication.run(ChameleonApplication.class, args);
-	}
-
-}
+app.directive('patternValidation', function() {
+    return {
+        require: '?ngModel',
+        link: function(scope, elm, attrs, ctrl) {
+            if (ctrl) {
+                ctrl.$validators.pattern = function(modelValue) {
+                    let inputPattern = /(^.*\W+.*$|^[A-Za-z0-9]{3}$|^[A-Za-z0-9]{6,}$|^(#[A-Za-z0-9]){1,7})/;
+                    return modelValue === null || inputPattern.test(modelValue);
+                };
+            }
+        }
+    };
+});

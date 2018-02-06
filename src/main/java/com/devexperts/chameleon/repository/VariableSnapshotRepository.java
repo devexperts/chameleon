@@ -4,7 +4,7 @@ package com.devexperts.chameleon.repository;
  * #%L
  * Chameleon. Color Palette Management Tool
  * %%
- * Copyright (C) 2016 - 2017 Devexperts, LLC
+ * Copyright (C) 2016 - 2018 Devexperts, LLC
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -24,8 +24,10 @@ package com.devexperts.chameleon.repository;
 
 import com.devexperts.chameleon.entity.VariableEntity;
 import com.devexperts.chameleon.entity.VariableSnapshotEntity;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.math.BigInteger;
 import java.util.Collection;
@@ -54,6 +56,7 @@ public interface VariableSnapshotRepository extends JpaRepository<VariableSnapsh
      * @param commitIds commit ids
      * @return list of {@link VariableSnapshotEntity}
      */
+    @Query(value = "SELECT s FROM VariableSnapshotEntity s WHERE s.variableEntity.id = ?1 AND s.commitEntity.id IN ?2")
     List<VariableSnapshotEntity> findAllVariableSnapshotEntityByVariableEntityIdAndCommitEntityIdIn(Long variableId, List<Long> commitIds);
 
     /**
@@ -62,7 +65,8 @@ public interface VariableSnapshotRepository extends JpaRepository<VariableSnapsh
      * @param commitId commit id
      * @return list of {@link VariableSnapshotEntity}
      */
-    List<VariableSnapshotEntity> findAllByCommitEntityId(Long commitId);
+    @Query(value = "SELECT v FROM VariableSnapshotEntity v WHERE v.commitEntity.id = :commitId")
+    List<VariableSnapshotEntity> findAllByCommitEntityId(@Param("commitId") Long commitId);
 
     /**
      * Returns variable ids which have different values in both commits
@@ -101,4 +105,12 @@ public interface VariableSnapshotRepository extends JpaRepository<VariableSnapsh
             "ON S1.VARIABLE_ID = S2.VARIABLE_ID " +
             "WHERE S1.COMMIT_ID = ?1 AND S2.COLOR IS NULL ", nativeQuery = true)
     List<BigInteger> getChangedVariablesByCommitIds(Long firstCommitId, Long secondCommitId);
+
+    @Query(value = "SELECT v FROM VariableSnapshotEntity v WHERE v.commitEntity.id IN ?1")
+    List<VariableSnapshotEntity> findAllByCommitEntityIdIn(List<Long> ids);
+
+    @Query(value = "SELECT DISTINCT i.variableEntity.id FROM VariableSnapshotEntity i WHERE ids IN ?1")
+    List<Long> getVariableIdsByCommitEntityIdIn(List<Long> ids);
+
+
 }

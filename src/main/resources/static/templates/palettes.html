@@ -2,7 +2,7 @@
  * #%L
  * Chameleon. Color Palette Management Tool
  * %%
- * Copyright (C) 2016 - 2017 Devexperts, LLC
+ * Copyright (C) 2016 - 2018 Devexperts, LLC
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -19,66 +19,92 @@
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
  * #L%
 -->
+<div ng-controller="PaletteController as palette_controller" class="scrollable">
+    <header>
+        <nav class="navbar navbar-fixed-top navbar-default"
+             style="padding-left: 20px; padding-right: 20px; min-width: 782px;">
+            <div class="container-fluid" ng-controller="HeaderController as header_controller">
+                <div class="row">
+                    <ul class="nav navbar-nav">
+                        <li>
+                            <a class="navbar-brand" href="/">Chameleon</a>
+                        </li>
+                        <li>
+                            <a href="" ng-click="palette_controller.selectPalettes()">
+                                {{palette_controller.model.selectedPalettes.length}} palettes selected
+                            </a>
+                        </li>
+                        <li class="header-item">
+                            <button class="btn btn-secondary btn-md" ng-click="palette_controller.addPalette()">Add
+                                Palette
+                            </button>
+                        </li>
+                        <li class="header-item">
+                            <button class="btn btn-secondary btn-md" ng-click="palette_controller.showVariable(null)">
+                                Add
+                                Variable
+                            </button>
+                        </li>
+                        <li class="header-item" style="padding-top: 13px">
+                            <md-progress-circular md-diameter="25" md-mode="indeterminate" ng-disabled="!header_controller.savingInProgress" ng-show="header_controller.savingInProgress"></md-progress-circular>
+                        </li>
+                    </ul>
 
-<div class="row" ng-controller="PaletteController as palette_controller">
-    <div class="form-group col-xs-12">
-        <h3>
-            <span class="header-with-padding-right">Color Palettes</span>
-            <a href="" class="header-with-padding-right" ng-click="palette_controller.selectPalettes()">
-                {{palette_controller.model.selectedPalettes.length}} selected
-            </a>
-            <div class="btn-group header-with-padding-right" uib-dropdown>
-                <button id="single-button" type="button"
-                        class="btn btn-default header-with-padding-right" uib-dropdown-toggle>
-                    Variable View <span class="caret"></span>
-                </button>
-                <ul class="dropdown-menu" uib-dropdown-menu role="menu" aria-labelledby="single-button">
-                    <li role="menuitem"><a href="#">Variable View</a></li>
-                </ul>
+                    <div class="col pull-right col-margin">
+                        <label class="label label-danger label-as-badge"
+                               ng-show="header_controller.getChangesCount() > 0" data-toggle="tooltip"
+                               title="{{header_controller.getChanges()}}">{{header_controller.getChangesCount()}}</label>
+                        <button ng-click="header_controller.saveChanges()" class="btn btn-primary"
+                                ng-disabled="allVariablesForm.$invalid || header_controller.getChangesCount() <= 0 || header_controller.savingInProgress">Commit Changes
+                        </button>
+                    </div>
+                </div>
             </div>
-            <button class="btn btn-info" ng-click="palette_controller.addPalette()">Add Palette</button>
-            <button class="btn btn-info" ng-click="palette_controller.showVariable(null)">Add Variable</button>
-        </h3>
-        <div>
-            <div uib-alert dismiss-on-timeout="10000" ng-repeat="alert in palette_controller.alerts" ng-class="'alert-' + (alert.type || 'warning')" close="palette_controller.closeAlert($index)">{{alert.msg}}</div>
-            <table class="table table-condensed blue">
-                <tr>
-                    <th class="fixed-column-variable-width">Variable Name</th>
-                    <th class="fixed-column-usage-width">Usage</th>
-                    <th ng-repeat="palette in palette_controller.model.selectedPalettes">
-                        {{palette.name}}
-                    </th>
-                </tr>
-                <tr ng-repeat="row in palette_controller.model.palettesView.rows">
-                    <td><a href="" class="header-with-padding-right" ng-click="palette_controller.showVariable(row.variable)">
-                        {{row.variable.name}}
-                    </a></td>
-                    <td>{{row.variable.usage}}</td>
-                    <td ng-repeat="palette in palette_controller.model.selectedPalettes" ng-init="snapshot = palette_controller.getSnapshot(palette.id, row.snapshots)">
-                        <div class="fixed-column-width">
-                            <div class="row no-gutter">
-                                <div class="col-xs-4" id="snapshot_color_{{snapshot.variableId}}_{{snapshot.paletteId}}">
-                                    <input type="text" class="form-control" ng-model="snapshot.color" ng-change="palette_controller.addChange(row.variable, [snapshot])" placeholder="Not set">
-                                </div>
-                                <div class="col-xs-4">
-                                    <div class="input-group">
-                                        <input type="number" class="form-control" ng-model="snapshot.opacity" ng-disabled="!snapshot.color" ng-change="palette_controller.addChange(row.variable, [snapshot])">
-                                        <div class="input-group-addon">%</div>
-                                    </div>
-                                </div>
-
-                                <div class="col-xs-1 color-container" ng-show="snapshot.color">
-                                    <!--New line make space between elements, don't do it-->
-                                    <div class="color-block" style="background:#{{snapshot.color}}; border-right: 1px solid #E6E6E6;" ></div><div class="color-block" style="background:#{{snapshot.color}}; opacity: {{(snapshot.opacity === null || snapshot.opacity === 0) ? 1 : snapshot.opacity / 100}};"></div>
+        </nav>
+    </header>
+    <div class="container-fluid scrollable">
+        <form name="allVariablesForm">
+            <div class="navbar navbar-fixed-top navbar-default navbar-header">
+                <div class="container-fluid container-scroll container-table-header">
+                    <div id="table-head" class="row">
+                        <div class="col-xs-1 table-header-item variable">Variable Name</div>
+                        <div class="col-xs-1 table-header-item usage">Usage</div>
+                        <div class="col-xs-3 table-header-item palette"
+                             ng-repeat="palette in palette_controller.model.selectedPalettes">
+                            {{palette.name}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="table-body" class="container-fluid container-scroll-auto">
+                <div class="row row-padding" data-toggle="tooltip"
+                     ng-repeat-start="row in palette_controller.model.palettesView.rows">
+                    <div class="col-xs-1 table-body-item variable">
+                        <a href="" ng-click="palette_controller.showVariable(row.variable)">
+                            {{row.variable.name}}
+                        </a>
+                    </div>
+                    <div class="col-xs-1 table-body-item usage">{{row.variable.usage}}</div>
+                    <div class="col-xs-3 table-body-item palette"
+                         ng-repeat="palette in palette_controller.model.selectedPalettes"
+                         ng-init="snapshot = palette_controller.getSnapshot(palette.id, row.snapshots)">
+                        <div class="row no-gutter">
+                            <div class="col-xs-4"
+                                 id="snapshot_color_{{snapshot.variableId}}_{{snapshot.paletteId}}">
+                                <color-input></color-input>
+                            </div>
+                            <div class="col-xs-4">
+                                <div class="input-group">
+                                    <opacity-input></opacity-input>
+                                    <div class="input-group-addon">%</div>
                                 </div>
                             </div>
+                            <colors></colors>
                         </div>
-                    </td>
-                </tr>
-            </table>
-            <div ng-hide="palette_controller.model.selectedPalettes.length">
-                No selected palettes
+                    </div>
+                </div>
+                <hr ng-repeat-end/>
             </div>
-        </div>
+        </form>
     </div>
 </div>

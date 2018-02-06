@@ -4,7 +4,7 @@ package com.devexperts.chameleon.entity;
  * #%L
  * Chameleon. Color Palette Management Tool
  * %%
- * Copyright (C) 2016 - 2017 Devexperts, LLC
+ * Copyright (C) 2016 - 2018 Devexperts, LLC
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -24,9 +24,12 @@ package com.devexperts.chameleon.entity;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.util.Objects;
 
 /**
  * Class for variable. Using for storing variables dictionary used in {@link PaletteEntity}
@@ -39,7 +42,6 @@ public class VariableEntity extends BaseEntity {
     @NotNull
     @Column(unique = true)
     private String name;
-
     private String usage;
 
     public VariableEntity() {
@@ -64,6 +66,21 @@ public class VariableEntity extends BaseEntity {
 
     public void setUsage(String usage) {
         this.usage = usage;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        VariableEntity that = (VariableEntity) o;
+        return Objects.equals(name, that.name) &&
+                Objects.equals(usage, that.usage);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), name, usage);
     }
 
     @Override

@@ -2,7 +2,7 @@
  * #%L
  * Chameleon. Color Palette Management Tool
  * %%
- * Copyright (C) 2016 - 2017 Devexperts, LLC
+ * Copyright (C) 2016 - 2018 Devexperts, LLC
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -20,9 +20,11 @@
  * #L%
  */
 
-var app = angular.module('chameleon', ['ngAnimate', 'ngSanitize', 'ui.bootstrap', 'ngRoute']);
+var app = angular.module('chameleon', ['ngAnimate', 'ngSanitize', 'ui.bootstrap', 'ngRoute', 'ngMaterial']);
 
 var palettePath = '/api/palettes';
+var renamePath = 'api/palettes/rename';
+var removePalettePath = 'api/palettes/remove/';
 var selectedPaletteViewPath = '/view/variables';
 var variablePath = '/api/variables';
 var variableSnapshotPath = '/api/variablesnapshots';
@@ -36,44 +38,52 @@ var variableSaveChangesPath = variableSnapshotPath + "/save";
 var commitsByPaletteIdPath = commitsPath + '/palette';
 
 var HttpCodes = {
-    success : 200,
-    created : 201
+    success: 200,
+    created: 201,
+    notModified: 304
 };
 
-app.config(['$locationProvider', '$routeProvider', function($locationProvider, $routeProvider) {
+var INPUT_STYLE = {
+    ERROR: 'input-validation-error',
+    DEFAULT: 'input-default',
+    CHANGED: 'input-data-changed'
+};
+
+app.config(['$locationProvider', '$routeProvider', function ($locationProvider, $routeProvider) {
     $locationProvider.html5Mode(false);
     $locationProvider.hashPrefix('');
 
     $routeProvider
         .when('/', {
-            templateUrl : 'templates/palettes.html'
+            templateUrl: 'templates/palettes.html'
         })
         .when('/palettes', {
-            templateUrl : 'templates/palettes.html'
+            templateUrl: 'templates/palettes.html'
         })
         .when('/diff', {
-            templateUrl : 'templates/diff.html'
+            templateUrl: 'templates/diff.html'
         })
         .otherwise({
             redirectTo: '/palettes'
-        })
-    ;
+        });
 }]);
 
 app.controller('MainController',
-    function ($uibModal, $document, $http, $scope) {
+    function ($uibModal, $document, $http, $scope, $window, changesService, layoutService) {
+        $window.onbeforeunload = function () {
+            layoutService.saveLayout($scope.model, changesService.getAttributes());
+        };
 
-        const model = {};
-        model.selectedPalettes = [];
-        model.palettes = [];
-        model.variablesView = {};
-        model.variablesView.columns = {};
-        model.variablesView.rows = {};
-        $scope.model = model;
         $scope.changes = [];
         $scope.saveChangesPath = "";
-
         $scope.alerts = [];
+        $scope.closeAlert = function (index) {
+            $scope.alerts.splice(index, 1);
+        };
+
+        var layout = layoutService.loadLayout();
+        $scope.model = layout.model;
+        changesService.setAttributes(layout.changes);
     }
 );
 

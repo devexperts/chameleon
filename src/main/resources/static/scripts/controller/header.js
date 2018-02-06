@@ -2,7 +2,7 @@
  * #%L
  * Chameleon. Color Palette Management Tool
  * %%
- * Copyright (C) 2016 - 2017 Devexperts, LLC
+ * Copyright (C) 2016 - 2018 Devexperts, LLC
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -21,8 +21,10 @@
  */
 
 app.controller('HeaderController',
-    function ($http, $scope, $location, changesService, versionService) {
+    function ($http, $scope, $mdToast, $location, changesService, versionService) {
         var $controller = this;
+
+        $controller.savingInProgress = false;
 
         $controller.unexpectedError = {
             type : 'danger',
@@ -35,21 +37,32 @@ app.controller('HeaderController',
 
         $controller.saveChanges = function () {
             var changes = changesService.getChanges();
+            $controller.savingInProgress = true;
             Object.keys(changes).forEach(function(url) {
                 $http.post(url, changes[url]
                 ).then(function (response) {
                     if (response.status === HttpCodes.success) {
+                        changes[url].forEach(function(change) {
+                            change.snapshots.forEach(function(snapshot) {
+                                changesService.changePaletteVariableSnapshot(snapshot);
+                                changesService.removeChangesToShow(snapshot.variableId, snapshot.paletteId, 'color');
+                                changesService.removeChangesToShow(snapshot.variableId, snapshot.paletteId, 'opacity');
+                            });
+                        });
                         changesService.reset();
                         $scope.alerts.push({
                             type: 'success',
-                            msg: "Save successful"
+                            msg: "Saved successfuly!"
                         });
+                        $controller.savingInProgress = false;
                     } else {
                         $scope.alerts.push($controller.unexpectedError);
+                        $controller.savingInProgress = false;
                     }
                 }, function (exception) {
                     console.log(exception.data.message);//TODO better error logging
                     $scope.alerts.push($controller.unexpectedError);
+                    $controller.savingInProgress = false;
                 });
             });
         };

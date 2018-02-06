@@ -1,6 +1,4 @@
-package com.devexperts.chameleon;
-
-/*-
+/*
  * #%L
  * Chameleon. Color Palette Management Tool
  * %%
@@ -22,18 +20,11 @@ package com.devexperts.chameleon;
  * #L%
  */
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-
-/**
- * SpringBoot entry point application
- *
- */
-@SpringBootApplication
-public class ChameleonApplication {
-
-	public static void main(String[] args) {
-		SpringApplication.run(ChameleonApplication.class, args);
-	}
-
-}
+app.directive('colors', function () {
+    return {
+        template: ' <div class="col-xs-1 color-container">' +
+        ' <div class="color-block" style="background:#{{snapshot.color}}; border-right: 1px solid #E6E6E6;"></div><div class="color-block" style="background:#{{snapshot.color}}; opacity: {{(snapshot.opacity === null || snapshot.opacity === 0) ? 1 : snapshot.opacity / 100}};"></div>' +
+        '</div>',
+        link: function(scope, elm, attrs) {}
+    };
+});

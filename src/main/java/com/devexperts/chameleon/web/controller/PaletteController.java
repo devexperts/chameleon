@@ -4,7 +4,7 @@ package com.devexperts.chameleon.web.controller;
  * #%L
  * Chameleon. Color Palette Management Tool
  * %%
- * Copyright (C) 2016 - 2017 Devexperts, LLC
+ * Copyright (C) 2016 - 2018 Devexperts, LLC
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -35,7 +35,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 import java.util.List;
+import java.util.Objects;
 
+import static java.lang.Enum.valueOf;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
@@ -48,8 +50,9 @@ import static org.springframework.web.bind.annotation.RequestMethod.POST;
 public class PaletteController {
 
     public static final String PALETTE_PATH = "api/palettes";
-
     public static final String PALETTE_VARIABLE_VIEW_PATH = "view/variables";
+    public static final String PALETTE_RENAME_PATH = "/rename";
+    public static final String PALETTE_REMOVE_PATH = "/remove/{id}";
 
     private final PaletteService paletteService;
 
@@ -98,6 +101,26 @@ public class PaletteController {
     @RequestMapping(method = POST)
     public ResponseEntity<?> create(@RequestBody @Valid PaletteDTO paletteDTO) {
         Long id = paletteService.save(paletteDTO);
-        return new ResponseEntity<>(id, HttpStatus.CREATED);
+        if (Objects.nonNull(id)) {
+            return new ResponseEntity<>(id, HttpStatus.CREATED);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_MODIFIED);
+        }
+    }
+
+    @RequestMapping(path = PALETTE_RENAME_PATH, method = POST)
+    public ResponseEntity<?> rename(@RequestBody PaletteDTO paletteDTO) {
+        Long id = paletteService.save(paletteDTO);
+        if (Objects.nonNull(id)) {
+            return new ResponseEntity<>(id, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_MODIFIED);
+        }
+    }
+
+    @RequestMapping(path = PALETTE_REMOVE_PATH, method = GET)
+    public ResponseEntity<?> delete(@PathVariable long id) {
+        paletteService.setPaletteNotActive(id);
+        return new ResponseEntity<Object>(id, HttpStatus.OK);
     }
 }

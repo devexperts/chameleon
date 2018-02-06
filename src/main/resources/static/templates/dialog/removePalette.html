@@ -1,0 +1,17 @@
+<div class="modal-header">
+    <h4 class="modal-title" id="palette-modal-title"><b>Delete Palette</b></h4>
+</div>
+<div class="modal-body" id="palette-modal-body">
+    <div class="form-group" style="text-align: center">
+        <div class="h5">Are you sure you want to delete <b>{{ palette.name }}</b> color palette?</div>
+    </div>
+</div>
+<div class="modal-error-message" ng-show="$controller.errorMessage.length">
+    <div>
+        {{$controller.errorMessage}}
+    </div>
+</div>
+<div class="modal-footer">
+    <button class="btn btn-secondary" type="button" ng-click="$controller.close(false)">Cancel</button>
+    <button class="btn btn-primary" type="button" ng-click="$controller.close(true)">Delete</button>
+</div>

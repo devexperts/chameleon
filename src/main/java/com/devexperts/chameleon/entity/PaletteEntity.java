@@ -4,7 +4,7 @@ package com.devexperts.chameleon.entity;
  * #%L
  * Chameleon. Color Palette Management Tool
  * %%
- * Copyright (C) 2016 - 2017 Devexperts, LLC
+ * Copyright (C) 2016 - 2018 Devexperts, LLC
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -24,9 +24,11 @@ package com.devexperts.chameleon.entity;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.util.List;
 
 /**
  * Class for pallete.
@@ -42,11 +44,15 @@ public class PaletteEntity extends BaseEntity {
     @Column(unique = true)
     private String name;
 
+    @Column(name = "is_active")
+    private boolean active;
+
     public PaletteEntity() {
     }
 
     public PaletteEntity(String name) {
         this.name = name;
+        this.active = true;
     }
 
     public String getName() {
@@ -62,5 +68,9 @@ public class PaletteEntity extends BaseEntity {
         return "PaletteEntity{" +
                 "name='" + name + '\'' +
                 '}';
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
     }
 }

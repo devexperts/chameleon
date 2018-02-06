@@ -4,7 +4,7 @@ package com.devexperts.chameleon.repository;
  * #%L
  * Chameleon. Color Palette Management Tool
  * %%
- * Copyright (C) 2016 - 2017 Devexperts, LLC
+ * Copyright (C) 2016 - 2018 Devexperts, LLC
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -49,4 +49,6 @@ public interface VariableRepository extends JpaRepository<VariableEntity, Long> 
      * @return list of {@link VariableEntity}
      */
     List<VariableEntity> findAllByNameIgnoreCaseIn(List<String> names);
+
+    List<VariableEntity> findAllByIdIn(List<Long> ids);
 }

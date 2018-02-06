@@ -4,7 +4,7 @@ package com.devexperts.chameleon.dto;
  * #%L
  * Chameleon. Color Palette Management Tool
  * %%
- * Copyright (C) 2016 - 2017 Devexperts, LLC
+ * Copyright (C) 2016 - 2018 Devexperts, LLC
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -24,26 +24,26 @@ package com.devexperts.chameleon.dto;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Objects;
 
 public class PaletteViewCellDTO {
-    private final Long variableId;
-    private final String variableName;
-    private final String variableUsage;
-    private final Long paletteId;
-    private final String paletteName;
-    private final Long variableSnapshotId;
-    private final String color;
-    private final Float opacity;
+    private Long variableId;
+    private String variableName;
+    private String variableUsage;
+    private Long paletteId;
+    private String paletteName;
+    private Long variableSnapshotId;
+    private String color;
+    private Float opacity;
 
-    @JsonCreator
-    public PaletteViewCellDTO(@JsonProperty("variableId") Long variableId,
-                                @JsonProperty("variableName") String variableName,
-                              @JsonProperty("variableUsage") String variableUsage,
-                              @JsonProperty("paletteId") Long paletteId,
-                              @JsonProperty("paletteName") String paletteName,
-                              @JsonProperty("variableSnapshotId") Long variableSnapshotId,
-                              @JsonProperty("color") String color,
-                              @JsonProperty("opacity") Float opacity) {
+    public PaletteViewCellDTO(Long variableId,
+                              String variableName,
+                              String variableUsage,
+                              Long paletteId,
+                              String paletteName,
+                              Long variableSnapshotId,
+                              String color,
+                              Float opacity) {
         this.variableId = variableId;
         this.variableName = variableName;
         this.variableUsage = variableUsage;
@@ -51,6 +51,41 @@ public class PaletteViewCellDTO {
         this.paletteName = paletteName;
         this.variableSnapshotId = variableSnapshotId;
         this.color = color;
+        this.opacity = opacity;
+    }
+
+    private PaletteViewCellDTO() {
+    }
+
+    private void setVariableId(Long variableId) {
+        this.variableId = variableId;
+    }
+
+    private void setVariableName(String variableName) {
+        this.variableName = variableName;
+    }
+
+    private void setVariableUsage(String variableUsage) {
+        this.variableUsage = variableUsage;
+    }
+
+    private void setPaletteId(Long paletteId) {
+        this.paletteId = paletteId;
+    }
+
+    private void setPaletteName(String paletteName) {
+        this.paletteName = paletteName;
+    }
+
+    private void setVariableSnapshotId(Long variableSnapshotId) {
+        this.variableSnapshotId = variableSnapshotId;
+    }
+
+    private void setColor(String color) {
+        this.color = color;
+    }
+
+    private void setOpacity(Float opacity) {
         this.opacity = opacity;
     }
 
@@ -84,5 +119,95 @@ public class PaletteViewCellDTO {
 
     public Float getOpacity() {
         return opacity;
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+
+        private Long variableId;
+        private String variableName;
+        private String variableUsage;
+        private Long paletteId;
+        private String paletteName;
+        private Long variableSnapshotId;
+        private String color;
+        private Float opacity;
+
+        public Builder variableId(Long variableId) {
+            this.variableId = variableId;
+            return this;
+        }
+
+        public Builder paletteId(Long paletteId) {
+            this.paletteId = paletteId;
+            return this;
+        }
+
+        public Builder variableName(String variableName) {
+            this.variableName = variableName;
+            return this;
+        }
+
+        public Builder variableUsage(String variableUsage) {
+            this.variableUsage = variableUsage;
+            return this;
+        }
+
+        public Builder paletteName(String paletteName) {
+            this.paletteName = paletteName;
+            return this;
+        }
+
+        public Builder variableSnapshotId(Long variableSnapshotId) {
+            this.variableSnapshotId = variableSnapshotId;
+            return this;
+        }
+
+        public Builder color(String color) {
+            this.color = color;
+            return this;
+        }
+
+        public Builder opacity(Float opacity) {
+            this.opacity = opacity;
+            return this;
+        }
+
+        public PaletteViewCellDTO build() {
+            PaletteViewCellDTO paletteViewCellDTO = new PaletteViewCellDTO();
+            paletteViewCellDTO.setVariableId(this.variableId);
+            paletteViewCellDTO.setPaletteId(this.paletteId);
+            paletteViewCellDTO.setPaletteName(this.paletteName);
+            paletteViewCellDTO.setVariableName(this.variableName);
+            paletteViewCellDTO.setVariableUsage(this.variableUsage);
+            paletteViewCellDTO.setVariableSnapshotId(this.variableSnapshotId);
+            paletteViewCellDTO.setColor(this.color);
+            paletteViewCellDTO.setOpacity(this.opacity);
+            return paletteViewCellDTO;
+        }
+
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        PaletteViewCellDTO that = (PaletteViewCellDTO) o;
+        return Objects.equal(variableId, that.variableId) &&
+                Objects.equal(variableName, that.variableName) &&
+                Objects.equal(variableUsage, that.variableUsage) &&
+                Objects.equal(paletteId, that.paletteId) &&
+                Objects.equal(paletteName, that.paletteName) &&
+                Objects.equal(variableSnapshotId, that.variableSnapshotId) &&
+                Objects.equal(color, that.color) &&
+                Objects.equal(opacity, that.opacity);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(variableId, variableName, variableUsage, paletteId, paletteName, variableSnapshotId, color, opacity);
     }
 }

@@ -4,7 +4,7 @@ package com.devexperts.chameleon.repository;
  * #%L
  * Chameleon. Color Palette Management Tool
  * %%
- * Copyright (C) 2016 - 2017 Devexperts, LLC
+ * Copyright (C) 2016 - 2018 Devexperts, LLC
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -41,14 +41,16 @@ public interface PaletteRepository extends JpaRepository<PaletteEntity, Long> {
      * @param name
      * @return {@link PaletteEntity}
      */
-    PaletteEntity findFirstByNameIgnoreCase(String name);
+    PaletteEntity findFirstByActiveTrueAndNameIgnoreCase(String name);
+
+    PaletteEntity findAllByName(String name);
 
     /**
      * Find all palettes ordered by name
      *
      * @return list of {@link PaletteEntity}
      */
-    List<PaletteEntity> findAllByOrderByNameAsc();
+    List<PaletteEntity> findAllByActiveTrueOrderByNameAsc();
 
     /**
      * Find all palettes by ids
@@ -56,7 +58,7 @@ public interface PaletteRepository extends JpaRepository<PaletteEntity, Long> {
      * @param ids
      * @return list of {@link PaletteEntity}
      */
-    List<PaletteEntity> findAllByIdIn(List<Long> ids);
+    List<PaletteEntity> findAllByIdInAndActiveTrue(List<Long> ids);
 
     /**
      * Returns native query result produced by cross join variables and palettes
@@ -82,6 +84,7 @@ public interface PaletteRepository extends JpaRepository<PaletteEntity, Long> {
      * @param commitIds commit ids
      * @return list of native query result. Will be converted by {@link com.devexperts.chameleon.converter.PaletteViewCellConverter}
      */
+    @Deprecated
     @Query(value =
             "SELECT " +
             "      ALL_PALETTES_VARS.VARIABLE_ID, " +
@@ -102,7 +105,7 @@ public interface PaletteRepository extends JpaRepository<PaletteEntity, Long> {
             "                    NAME " +
             "              FROM " +
             "                    PALETTE " +
-            "                    WHERE ID IN ?1) AS PAL " +
+            "                    WHERE ID IN ?1 AND IS_ACTIVE = TRUE) AS PAL " +
             "              CROSS JOIN " +
             "                    (SELECT " +
             "                           DISTINCT VARIABLE_ID " +
@@ -194,4 +197,5 @@ public interface PaletteRepository extends JpaRepository<PaletteEntity, Long> {
             "ON VARIABLE.ID = ALL_PALETTES_VARS.VARIABLE_ID " +
             "ORDER BY VARIABLE.NAME,  ALL_PALETTES_VARS.COMMIT_ID", nativeQuery = true)
     List<Object[]> getPaletteDiffView(List<Long> commitIds, List<Long> variableIds);
+
 }

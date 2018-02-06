@@ -115,4 +115,9 @@
     <changeSet author="devexperts" id="1493116201026-13">
         <modifyDataType tableName="variable_snapshot"  columnName="opacity"  newDataType="DECIMAL(7, 4)"/>
     </changeSet>
+    <changeSet author="devexperts" id="1493116201026-14">
+        <addColumn tableName="Palette">
+            <column name="is_active" type="BOOLEAN" defaultValue="TRUE"/>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>

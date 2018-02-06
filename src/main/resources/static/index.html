@@ -4,7 +4,7 @@
  * #%L
  * Chameleon. Color Palette Management Tool
  * %%
- * Copyright (C) 2016 - 2017 Devexperts, LLC
+ * Copyright (C) 2016 - 2018 Devexperts, LLC
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -26,13 +26,19 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Chameleon</title>
     <!-- 3rd Party Components -->
-    <link rel="stylesheet" href="webjars/bootstrap/3.3.7/css/bootstrap.min.css">
-    <script src="webjars/angularjs/1.6.3/angular.min.js" type="text/javascript"></script>
-    <script src="webjars/angular-animate/1.6.3/angular-animate.min.js" type="text/javascript"></script>
-    <script src="webjars/angular-route/1.6.3/angular-route.min.js" type="text/javascript"></script>
-    <script src="webjars/angular-sanitize/1.6.3/angular-sanitize.min.js" type="text/javascript"></script>
-    <script src="webjars/angular-bootstrap/2.5.0/ui-bootstrap-tpls.min.js" type="text/javascript"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.6.5/angular.min.js" type="text/javascript"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.6.5/angular-animate.min.js" type="text/javascript"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.6.5/angular-aria.min.js" type="text/javascript"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.6.5/angular-route.min.js" type="text/javascript"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.6.5/angular-sanitize.min.js" type="text/javascript"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/2.5.0/ui-bootstrap-tpls.min.js" type="text/javascript"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-material/1.1.5/angular-material.js"></script>
+
     <!-- Custom content -->
     <script src="scripts/controller/main.js" type="text/javascript"></script>
     <script src="scripts/controller/header.js" type="text/javascript"></script>
@@ -40,43 +46,21 @@
     <script src="scripts/controller/diff.js" type="text/javascript"></script>
     <script src="scripts/service/changes.js" type="text/javascript"></script><!-- TODO include only one file -->
     <script src="scripts/service/versions.js" type="text/javascript"></script>
+    <script src="scripts/service/layout.js" type="text/javascript"></script>
+    <script src="scripts/service/inputValidation.js" type="text/javascript"></script>
+    <script src="scripts/directive/patternValidation.js" type="text/javascript"></script>
+    <script src="scripts/directive/opacityInput.js" type="text/javascript"></script>
+    <script src="scripts/directive/colorInput.js" type="text/javascript"></script>
+    <script src="scripts/directive/colors.js" type="text/javascript"></script>
+    <script>
+        $(document).ready(function() {
+            $('[data-toggle="tooltip"]').tooltip();
+        });
+    </script>
     <link rel="stylesheet" href="styles/chameleon.css">
 </head>
-<body ng-controller="MainController">
-
-<header>
-    <nav class="navbar navbar-default">
-        <div class="container" ng-controller="HeaderController as header_controller">
-            <div class="row">
-                <div class="col">
-                    <div class="navbar-header">
-                        <a class="navbar-brand" href="/">Chameleon</a>
-                    </div>
-
-                    <ul class="nav navbar-nav">
-                        <li ng-class="{ active: isActive('/palettes')}"><a href="#palettes">Palletes</a></li>
-                    </ul>
-                    <ul class="nav navbar-nav">
-                        <li ng-class="{ active: isActive('/diff')}"><a href="#diff">Diff View</a></li>
-                    </ul>
-                </div>
-                <div class="col pull-right"  style="margin-top: 10px;">
-                    <label class="label label-danger label-as-badge"  ng-show="header_controller.getChangesCount() > 0" data-toggle="tooltip" title="{{header_controller.getChanges()}}">{{header_controller.getChangesCount()}}</label>
-                    <button ng-click="header_controller.saveChanges()" class="btn btn-info" ng-disabled="header_controller.getChangesCount() <= 0">Save Changes</button>
-                </div>
-            </div>
-        </div>
-    </nav>
-</header>
-
-<div class="container">
-    <div ng-view></div>
-</div>
-<script>
-    // Tooltip enabling
-    document.ready(function() {
-        $('[data-toggle="tooltip"]').tooltip();
-    });
-</script>
+<body ng-controller="MainController" class="scrollable">
+<div class="alerts" uib-alert ng-repeat="alert in alerts" ng-class="'alert-' + (alert.type || 'warning')" close="closeAlert($index)" dismiss-on-timeout="5000">{{alert.msg}}</div>
+<div ng-view class="scrollable"></div>
 </body>
 </html>

@@ -2,7 +2,7 @@
  * #%L
  * Chameleon. Color Palette Management Tool
  * %%
- * Copyright (C) 2016 - 2017 Devexperts, LLC
+ * Copyright (C) 2016 - 2018 Devexperts, LLC
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -21,39 +21,51 @@
 -->
 
 <div class="modal-header">
-	<h3 class="modal-title" id="select-palettes-modal-title">Select palettes</h3>
+    <h3 class="modal-title" id="select-palettes-modal-title">Select palettes</h3>
 </div>
 <div class="modal-body" id="select-palettes-modal-body">
-	<div ng-repeat="palette in $controller.palettes">
-		<div ng-mouseover="$controller.hoverIn($index)" ng-mouseleave="$controller.hoverOut($index)">
-			<input
-					type="checkbox"
-					value="{{palette.name}}"
-					ng-checked="$controller.isSelectedPalette(palette)"
-					ng-click="$controller.toggleSelection(palette)"
-					title="id={{palette.id}}"
-			>
-			<label>{{palette.name}}</label>
-			<span style="float:right;">
-			<a ng-show="$controller.hover[$index]" href="" popover-trigger="'outsideClick'" popover-is-open="$controller.copyDialogIsOpen[$index]" popover-placement="bottom"
-			   uib-popover-template="'templates/popup/selectSourcePalette.html'" popover-title="Select Source Palette">
+    <div ng-repeat="palette in $controller.palettes">
+        <div ng-mouseover="$controller.hoverIn($index)" ng-mouseleave="$controller.hoverOut($index)">
+            <input
+                    id="{{ 'name' + palette.id }}"
+                    type="checkbox"
+                    value="{{palette.name}}"
+                    ng-checked="$controller.isSelectedPalette(palette)"
+                    ng-click="$controller.toggleSelection(palette)"
+                    title="id={{palette.id}}"
+            >
+            <label for="{{ 'name' + palette.id }}">{{palette.name}} (id: {{ palette.id}})</label>
+            <span style="float:right;">
+			<a class="palette-menu-item" ng-show="$controller.hover[$index]" href="" popover-trigger="'outsideClick'"
+               popover-is-open="$controller.copyDialogIsOpen[$index]" popover-placement="bottom"
+               uib-popover-template="'templates/popup/selectSourcePalette.html'" popover-title="Select Source Palette">
 				<i class="glyphicon glyphicon-share-alt gly-rotate-270-flip-vertical"></i>
 				Replace By
-			</a>&nbsp;
-			<a ng-show="$controller.hover[$index]" href="" class="header-with-padding-right" ng-click="$controller.selectCommits(palette.id, palette.name)">
+			</a>
+			<a class="palette-menu-item"  ng-show="$controller.hover[$index]" href=""
+               ng-click="$controller.selectCommits(palette.id, palette.name)">
 				<i class="glyphicon glyphicon-retweet"></i>
                 Show diff
             </a>
+            <a class="palette-menu-item"  ng-show="$controller.hover[$index]" href="" popover-trigger="'outsideClick'"
+                   popover-is-open="$controller.renameDialogIsOpen[$index]"
+                   popover-placement="bottom" uib-popover-template="'templates/popup/renameDialog.html'"
+                   popover-title="Rename palette">
+            <i class="glyphicon glyphicon-pencil"></i>
+            </a>
+            <a class="palette-menu-item"  ng-show="$controller.hover[$index]" href="" ng-click="$controller.remove($index)">
+				<i class="glyphicon glyphicon-remove"></i>
+            </a>
 			</span>
-		</div>
-	</div>
+        </div>
+    </div>
 </div>
 <div class="modal-error-message" ng-show="$controller.errorMessage.length">
-	<div>
-		{{$controller.errorMessage}}
-	</div>
+    <div>
+        {{$controller.errorMessage}}
+    </div>
 </div>
 <div class="modal-footer">
-	<button class="btn btn-default" type="button" ng-click="$controller.cancel()">Cancel</button>
-	<button class="btn btn-info" type="button" ng-click="$controller.ok()">Select</button>
+    <button class="btn btn-secondary" type="button" ng-click="$controller.cancel()">Cancel</button>
+    <button class="btn btn-primary" type="button" ng-click="$controller.ok()">Select</button>
 </div>

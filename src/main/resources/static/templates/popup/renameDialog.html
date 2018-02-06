@@ -1,0 +1,12 @@
+<div class="select-source-palette-dialog">
+    <div class="form-group">
+        <label for="newName">New palette name: </label>
+        <input class="form-control" id="newName" type="text" ng-model="$controller.newName" ng-init="$controller.newName = $controller.palettes[$index].name"/>
+    </div>
+    <div class="row">
+        <div class="col-xs-12 text-right">
+            <button class="btn btn-default" type="button" ng-click="$controller.cancelRename($index)">Cancel</button>
+            <button class="btn btn-primary" type="button" ng-disabled="$controller.isDisabledRenameSubmit()"ng-click="$controller.rename($index)">Rename</button>
+        </div>
+    </div>
+</div>

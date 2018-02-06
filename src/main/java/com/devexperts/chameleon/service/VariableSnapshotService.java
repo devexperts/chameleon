@@ -4,7 +4,7 @@ package com.devexperts.chameleon.service;
  * #%L
  * Chameleon. Color Palette Management Tool
  * %%
- * Copyright (C) 2016 - 2017 Devexperts, LLC
+ * Copyright (C) 2016 - 2018 Devexperts, LLC
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -28,6 +28,7 @@ import com.devexperts.chameleon.dto.PaletteDiffViewDTO;
 import com.devexperts.chameleon.dto.SaveVariableDTO;
 import com.devexperts.chameleon.dto.VariableDTO;
 import com.devexperts.chameleon.dto.VariableSnapshotDTO;
+import com.devexperts.chameleon.dto.VariableSnapshotViewDTO;
 import com.devexperts.chameleon.dto.VariableViewDTO;
 import com.devexperts.chameleon.entity.BaseEntity;
 import com.devexperts.chameleon.entity.CommitEntity;
@@ -47,6 +48,7 @@ import org.springframework.validation.Errors;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.SmartValidator;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -160,13 +162,13 @@ public class VariableSnapshotService {
         Map<Long, List<VariableSnapshotDTO>> changedSnapshots = saveNewSnapshots(viewDTOS, newCommitsByPaletteId);
         copyPreviousSnapshotsToNewSnapshots(lastCommits, newCommitsByPaletteId, changedSnapshots);
 
-        return changedSnapshots.keySet().stream().collect(Collectors.toList());
+        return new ArrayList<>(changedSnapshots.keySet());
     }
 
     public PaletteDiffViewDTO buildPaletteDiffView(Long firstCommitId, Long secondCommitId) {
 
         List<Long> diffVariableIds = repository.getChangedVariablesByCommitIds(firstCommitId, secondCommitId).stream()
-                .map(s -> s.longValue()).collect(Collectors.toList());
+                .map(BigInteger::longValue).collect(Collectors.toList());
 
         List<Long> selectedCommitIds = new ArrayList<>();
         selectedCommitIds.add(firstCommitId);
@@ -184,6 +186,14 @@ public class VariableSnapshotService {
                 && snapshot.getVariableId() != null
                 && snapshot.getPaletteId() != null
                 && Strings.isNullOrEmpty(snapshot.getColor());
+    }
+
+    public List<VariableSnapshotViewDTO> findAllByCommitId(Long commitId) {
+        return repository.findAllByCommitEntityId(commitId).stream()
+                .map(snapshotEntity -> new VariableSnapshotViewDTO(
+                        variableService.convertToDTO(snapshotEntity.getVariableEntity()),
+                        convertToDTO(snapshotEntity)))
+                .collect(Collectors.toList());
     }
 
     private void copyPreviousSnapshotsToNewSnapshots(List<CommitDTO> lastCommtis,
@@ -224,7 +234,7 @@ public class VariableSnapshotService {
 
     private Map<Long, CommitEntity> createNewCommitsMapByPalettes(List<Long> paletteIds) {
         return paletteService.getByIds(paletteIds).stream()
-                .collect(Collectors.toMap(PaletteEntity::getId, palette -> commitService.createNewCommit(palette)));
+                .collect(Collectors.toMap(PaletteEntity::getId, commitService::createNewCommit));
     }
 
     private Map<Long, List<VariableSnapshotDTO>> saveNewSnapshots(List<SaveVariableDTO> viewDTOS, Map<Long, CommitEntity> newCommitByPaletteId) {
@@ -251,7 +261,7 @@ public class VariableSnapshotService {
         return viewDTOS.stream()
                 .flatMap(dto -> saveAndConvert(dto, newCommitByPaletteId).stream())
                 .map(this::convertToDTO)
-                .collect(Collectors.groupingBy(s -> s.getPaletteId(), Collectors.toList()));
+                .collect(Collectors.groupingBy(VariableSnapshotDTO::getPaletteId, Collectors.toList()));
     }
 
     private Map<Long, List<VariableSnapshotDTO>> getDeletedSnapshots(List<SaveVariableDTO> viewDTOS) {
@@ -260,13 +270,13 @@ public class VariableSnapshotService {
                         .filter(this::isSnapshotDeleted)
                         .collect(Collectors.toList())
                         .stream())
-                .collect(Collectors.groupingBy(s -> s.getPaletteId(), Collectors.toList()));
+                .collect(Collectors.groupingBy(VariableSnapshotDTO::getPaletteId, Collectors.toList()));
     }
 
     private List<Long> getPaletteIdsFromView(List<SaveVariableDTO> viewDTOS) {
         return viewDTOS.stream()
                 .flatMap(dto -> dto.getSnapshots().stream())
-                .map(snapshot -> snapshot.getPaletteId())
+                .map(VariableSnapshotDTO::getPaletteId)
                 .distinct()
                 .collect(Collectors.toList());
     }
@@ -395,6 +405,6 @@ public class VariableSnapshotService {
                 variableId,
                 lastCommits.stream().map(CommitDTO::getId).collect(Collectors.toList())).stream()
                     .map(this::convertToDTO)
-                    .collect(Collectors.groupingBy(s -> s.getPaletteId(), Collectors.toList()));
+                    .collect(Collectors.groupingBy(VariableSnapshotDTO::getPaletteId, Collectors.toList()));
     }
 }

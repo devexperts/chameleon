@@ -2,7 +2,7 @@
  * #%L
  * Chameleon. Color Palette Management Tool
  * %%
- * Copyright (C) 2016 - 2017 Devexperts, LLC
+ * Copyright (C) 2016 - 2018 Devexperts, LLC
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -38,7 +38,11 @@ app.controller('AddPaletteModalInstanceCtrl', function ($uibModalInstance, $http
                     $uibModalInstance.close();
                 }
             }, function (exception) {
-                $controller.errorMessage = exception.data.message;
+                if (exception.status === HttpCodes.notModified) {
+                    $controller.errorMessage = "Unfortunately, palette with a given name already exists."
+                } else {
+                    $controller.errorMessage = exception.data.message;
+                }
             });
     };
 
@@ -47,7 +51,23 @@ app.controller('AddPaletteModalInstanceCtrl', function ($uibModalInstance, $http
     };
 });
 
-app.controller('VariableModalInstanceCtrl', function ($uibModalInstance, $http, $uibModal, selectedPalettes, variable, changesService) {
+app.controller('RemovePaletteModalInstanceController', function ($uibModalInstance, $scope, $http, palette) {
+    var $controller = this;
+    $scope.palette = palette;
+    $controller.close = function (remove) {
+        if (remove) {
+            $http.get(removePalettePath + palette.id).then(function () {
+                $uibModalInstance.close();
+            }, function (exception) {
+                $controller.errorMessage = "Something is wrong, status code:" + exception.data.message;
+            });
+        } else {
+            $uibModalInstance.close();
+        }
+    };
+});
+
+app.controller('VariableModalInstanceCtrl', function ($scope, $uibModalInstance, $http, $uibModal, selectedPalettes, variable, changesService, inputValidationService) {
     var $controller = this;
 
     $controller.errorMessage = null;
@@ -59,9 +79,31 @@ app.controller('VariableModalInstanceCtrl', function ($uibModalInstance, $http, 
     $controller.view.variable.usage = null;
     $controller.view.palettes = [];
     $controller.view.snapshots = [];
+    $controller.previousOpacity = "";
 
     setDialogMode(variable);
     getAllPalettesWithSnapshots(variable);
+
+    $controller.clearColors = function clearColors(snapshot) {
+        snapshot.color = null;
+        snapshot.opacity = null;
+    };
+
+    $controller.trim = inputValidationService.trimInput;
+    $controller.hexInputOnBlur = inputValidationService.hexInputOnBlur;
+    $controller.setAlphaDefaultIfHexExists = inputValidationService.setAlphaDefaultIfHexExists;
+    $controller.getStyle = function (snapshot) {
+        if ($scope.variableForm.$dirty) {
+            return inputValidationService.validateAndGetStyle('color', snapshot);
+        }
+    };
+    $controller.opacityOnFocus = function (snapshot) {
+        snapshot.opacity = !snapshot.opacity ? 100 : snapshot.opacity;
+        $controller.previousOpacity = snapshot.opacity;
+    };
+    $controller.opacityOnBlur = function (snapshot) {
+        return inputValidationService.alphaOnBlur(snapshot, $controller.previousOpacity);
+    };
 
     function getAllPalettesWithSnapshots(variable) {
         $http.get(variableSnapshotViewPath + getVariablePath()
@@ -88,7 +130,6 @@ app.controller('VariableModalInstanceCtrl', function ($uibModalInstance, $http, 
             changes.forEach(function(element, index) {
                 if (compareVariableViews(element, $controller.view)) {
                     $controller.view.snapshots = changes[index].snapshots;
-                    return;
                 }
             });
         }
@@ -104,40 +145,42 @@ app.controller('VariableModalInstanceCtrl', function ($uibModalInstance, $http, 
         }
     }
 
-    $controller.getSnapshot = function(paletteId) {
+    $controller.getSnapshot = function (paletteId) {
         return getSnapshot(paletteId, $controller.view.snapshots)
-    }
+    };
 
     $controller.checkVariableName = function () {
-        $http.get(variablePath + variableNamePath +'/'+ $controller.view.variable.name)
-            .then(function(response) {
-                if ( response.status === HttpCodes.success ) {
-                    if (response.data) {
-                        $controller.errorMessage = null;
+        if ($controller.view.variable) {
+            $http.get(variablePath + variableNamePath + '/' + $controller.view.variable.name)
+                .then(function (response) {
+                    if (response.status === HttpCodes.success) {
+                        if (response.data) {
+                            $controller.errorMessage = null;
+                        }
+                    } else {
+                        $controller.errorMessage = "Something is wrong, status code:" + response.statusText;
                     }
-                } else {
-                    $controller.errorMessage = "Something is wrong, status code:" + response.statusText;
-                }
 
-                setDialogMode(response.data);
+                    setDialogMode(response.data);
 
-                if (response.data) {
-                    getAllPalettesWithSnapshots(response.data);
-                }
+                    if (response.data) {
+                        getAllPalettesWithSnapshots(response.data);
+                    }
 
-            }, function(exception) {
-                $controller.errorMessage = "Something is wrong, status code:" + exception.data.message;
-            });
+                }, function (exception) {
+                    $controller.errorMessage = "Something is wrong, status code:" + exception.data.message;
+                });
+        }
     };
 
     $controller.ok = function () {
         var validVariableView = {};
         validVariableView.variable = $controller.view.variable;
-        validVariableView.snapshots = $controller.view.snapshots.filter(function(x){return x.color != null});
+        validVariableView.snapshots = $controller.view.snapshots;
 
         changesService.addChanges(variableSaveChangesPath, validVariableView,
             compareVariableViews,
-            function(element) {
+            function (element) {
                 return 'VariableView - id: ' + element.variable.id + ' name: ' + element.variable.name;
             });
         $uibModalInstance.close();
@@ -154,7 +197,7 @@ app.controller('VariableModalInstanceCtrl', function ($uibModalInstance, $http, 
             controller: 'DeleteVariableConfirmationModalInstanceCtrl',
             controllerAs: '$controller',
             appendTo: undefined,
-            size: 'md',
+            size: 'sm',
             resolve: {
                 variable: function () {
                     return $controller.view.variable;
@@ -177,17 +220,19 @@ app.controller('DeleteVariableConfirmationModalInstanceCtrl', function ($uibModa
     var $controller = this;
 
     $controller.errorMessage = null;
-    $controller.snapshotsCount = snapshots.filter(function(x){return x.color != null}).length;
+    $controller.snapshotsCount = snapshots.filter(function (x) {
+        return x.color != null
+    }).length;
 
     $controller.ok = function () {
         $http.delete(variableSnapshotPath + variableSnapshotDeleteVariablePath + '/' + variable.id
-        ).then(function(response) {
-            if ( response.status === HttpCodes.success ) {
+        ).then(function (response) {
+            if (response.status === HttpCodes.success) {
                 $uibModalInstance.close();
             } else {
                 $controller.errorMessage = response.data;
             }
-        }, function(exception) {
+        }, function (exception) {
             $controller.errorMessage = exception.data.message;
         });
     };
@@ -206,13 +251,13 @@ app.controller('CopyPaletteConfirmationModalInstanceCtrl', function ($uibModalIn
 
     $controller.ok = function () {
         $http.put(variableSnapshotPath + variableSnapshotCopyPath + '/' + sourcePalette.id + '/' + targetPalette.id
-        ).then(function(response) {
-            if ( response.status === HttpCodes.success ) {
+        ).then(function (response) {
+            if (response.status === HttpCodes.success) {
                 $uibModalInstance.close();
             } else {
                 $controller.errorMessage = response.data;
             }
-        }, function(exception) {
+        }, function (exception) {
             $controller.errorMessage = exception.data.message;
         });
     };
@@ -231,23 +276,26 @@ app.controller('SelectPalettesModalInstanceCtrl', function ($uibModalInstance, $
     $controller.palettes = [];
     $controller.selectedPalettes = selectedPalettes;
     $controller.copyDialogIsOpen = [];
+    $controller.renameDialogIsOpen = [];
     $controller.hover = [];
     $controller.commits = [];
+    $controller.newName = "";
 
     getAllPalettes();
 
     function getAllPalettes() {
         $http.get(palettePath
-        ).then(function(response) {
-            if ( response.status === HttpCodes.success ) {
+        ).then(function (response) {
+            if (response.status === HttpCodes.success) {
                 $controller.palettes = response.data;
                 $controller.copyDialogIsOpen.fill(false, 0, $controller.palettes - 1);
-                $controller.hover.fill(false, 0, $controller.palettes - 1 );
+                $controller.renameDialogIsOpen.fill(false, 0, $controller.palettes - 1);
+                $controller.hover.fill(false, 0, $controller.palettes - 1);
                 $controller.sourcePalette = $controller.palettes[0];
             } else {
                 $controller.errorMessage = "Something is wrong, status code:" + response.statusText;
             }
-        }, function(exception) {
+        }, function (exception) {
             $controller.errorMessage = "Something is wrong, status code:" + exception.data.message;
         });
     }
@@ -259,7 +307,7 @@ app.controller('SelectPalettesModalInstanceCtrl', function ($uibModalInstance, $
     };
 
     function arrayObjectIndexOf(array, property, item) {
-        for(var i = 0, len = array.length; i < len; i++) {
+        for (var i = 0, len = array.length; i < len; i++) {
             if (array[i][property] === item[property])
                 return i;
         }
@@ -268,7 +316,7 @@ app.controller('SelectPalettesModalInstanceCtrl', function ($uibModalInstance, $
 
     $controller.toggleSelection = function toggleSelection(palette) {
 
-        var paletteIndex = arrayObjectIndexOf(selectedPalettes,"id", palette);
+        var paletteIndex = arrayObjectIndexOf(selectedPalettes, "id", palette);
 
         if (paletteIndex > -1) {
             $controller.selectedPalettes.splice(paletteIndex, 1);
@@ -302,7 +350,7 @@ app.controller('SelectPalettesModalInstanceCtrl', function ($uibModalInstance, $
             controller: 'CopyPaletteConfirmationModalInstanceCtrl',
             controllerAs: '$controller',
             appendTo: undefined,
-            size: 'md',
+            size: 'sm',
             resolve: {
                 sourcePalette: function () {
                     return $controller.sourcePalette;
@@ -323,11 +371,13 @@ app.controller('SelectPalettesModalInstanceCtrl', function ($uibModalInstance, $
         $controller.hover[index] = false;
     };
 
-    $controller.hoverIn = function(index){
+    $controller.hoverIn = function (index) {
         function isAllPopoversClosed() {
             return $controller.copyDialogIsOpen.every(function (value) {
-                return !value;
-            });
+                    return !value;
+                }) && $controller.renameDialogIsOpen.every(function (val) {
+                    return !val;
+                });
         }
 
         if (isAllPopoversClosed()) {
@@ -335,11 +385,84 @@ app.controller('SelectPalettesModalInstanceCtrl', function ($uibModalInstance, $
         }
     };
 
-    $controller.hoverOut = function(index){
-        if (!$controller.copyDialogIsOpen.some(function (isOpen) {return isOpen})) {
-            $controller.hover[index] =  false;
+    $controller.rename = function (index) {
+        var paletteTO = {
+            id: $controller.palettes[index].id,
+            name: $controller.newName.slice(0)
+        };
+        $http.post(renamePath, paletteTO).then(function (response) {
+            if (response.status === HttpCodes.success) {
+                $controller.errorMessage = "";
+                $controller.palettes[index].name = $controller.newName.slice(0);
+                $controller.selectedPalettes = selectedPalettes;
+                var selected = $controller.selectedPalettes[index];
+                if (selected !== undefined) {
+                    selected.name = $controller.newName.slice(0);
+                }
+                $controller.cancelRename(index);
+
+                $controller.newName = "";
+            }
+        }, function (exception) {
+            if (exception.status === HttpCodes.notModified) {
+                $controller.errorMessage = "Unfortunately, palette with a given name already exists."
+            } else {
+                $controller.errorMessage = "Something is wrong, status code:" + exception.data.message;
+            }
+        });
+
+    };
+
+    $controller.cancelRename = function (index) {
+        $controller.renameDialogIsOpen[index] = false;
+        $controller.hover[index] = false;
+    };
+
+    $controller.isDisabledRenameSubmit = function () {
+        return $controller.newName.length === 0;
+    };
+
+    $controller.hoverOut = function (index) {
+        if (isAnyDialogOpened()) {
+            $controller.hover[index] = false;
         }
     };
+
+    $controller.remove = function (index) {
+        var palette = $controller.palettes[index];
+        if (palette !== null) {
+            var modalInstance = $uibModal.open({
+                animation: true,
+                templateUrl: 'templates/dialog/removePalette.html',
+                size: 'sm',
+                controller: 'RemovePaletteModalInstanceController',
+                controllerAs: '$controller',
+                windowClass: 'removeModal',
+                resolve: {
+                    palette: function () {
+                        return palette;
+                    }
+                }
+            });
+        }
+
+        modalInstance.result.then(function () {
+            setTimeout(function () {
+                $controller.palettes.splice(index, 1);
+                $controller.selectedPalettes.splice(index, 1);
+                getAllPalettes();
+            }, 50);
+        }, angular.noop);
+    };
+
+    function isAnyDialogOpened() {
+        return !$controller.copyDialogIsOpen.some(function (isOpen) {
+                return isOpen;
+            })
+            && !$controller.renameDialogIsOpen.some(function (isOpen) {
+                return isOpen;
+            })
+    }
 
     $controller.selectCommits = function (palette_id, palette_name) {
         var modalInstance = $uibModal.open({
@@ -347,13 +470,13 @@ app.controller('SelectPalettesModalInstanceCtrl', function ($uibModalInstance, $
             templateUrl: 'templates/dialog/selectCommits.html',
             controller: 'CommitController',
             controllerAs: '$controller',
-            size: 'md',
+            size: 'sm',
             appendTo: undefined,
             resolve: {
-                palette_id: function() {
+                palette_id: function () {
                     return palette_id;
                 },
-                palette_name: function() {
+                palette_name: function () {
                     return palette_name;
                 }
             }
@@ -377,18 +500,18 @@ app.controller('CommitController',
 
         function recieveCommits() {
             $http.get(commitsByPaletteIdPath + '/' + palette_id
-            ).then(function(response) {
-                if ( response.status === HttpCodes.success ) {
+            ).then(function (response) {
+                if (response.status === HttpCodes.success) {
                     $controller.commits = response.data;
                 } else {
                     $controller.errorMessage = "Something is wrong, status code:" + response.statusText;
                 }
-            }, function(exception) {
+            }, function (exception) {
                 $controller.errorMessage = "Something is wrong, status code:" + exception.data.message;
             });
         }
 
-        $controller.save = function(){
+        $controller.save = function () {
             versionService.addVersion('from', $controller.fromCommit);
             versionService.addVersion('to', $controller.toCommit);
             versionService.addVersion('palette_name', palette_name);
@@ -402,14 +525,14 @@ app.controller('CommitController',
     });
 
 app.controller('PaletteController',
-    function ($uibModal, $http, $scope, changesService) {
+    function ($uibModal, $http, $scope, changesService, inputValidationService) {
         var $controller = this;
         $controller.model = $scope.model;
 
         $controller.errorMessage = null;
         $controller.alerts = $scope.alerts;
         $controller.onlyNumbers = /^\d+$/;
-        $controller.closeAlert = function(index) {
+        $controller.closeAlert = function (index) {
             $controller.alerts.splice(index, 1);
         };
 
@@ -421,7 +544,7 @@ app.controller('PaletteController',
                 controllerAs: '$controller',
                 size: 'md',
                 appendTo: undefined
-            });
+            }).result.catch(angular.noop);
         };
 
         $controller.showVariable = function (variable) {
@@ -445,8 +568,23 @@ app.controller('PaletteController',
                     getSelectedPalettesView();
                 },
                 angular.noop
-            );
+            ).catch(angular.noop);
         };
+
+        $controller.previousOpacity = null;
+        $controller.hexInputOnBlur = inputValidationService.hexInputOnBlur;
+        $controller.trimInput = inputValidationService.trimInput;
+        $controller.setAlphaDefaultIfHexExists = inputValidationService.setAlphaDefaultIfHexExists;
+        $controller.opacityOnBlur = function (snapshot) {
+            inputValidationService.alphaOnBlur(snapshot, $controller.previousOpacity);
+        };
+
+        $controller.opacityOnFocus = function (snapshot) {
+            snapshot.opacity = snapshot.opacity ? snapshot.opacity : 100;
+            $controller.previousOpacity = snapshot.opacity;
+        };
+
+        $controller.validateAndGetStyle = inputValidationService.validateAndGetStyle;
 
         $controller.selectPalettes = function () {
             var modalInstance = $uibModal.open({
@@ -466,9 +604,9 @@ app.controller('PaletteController',
             modalInstance.result.then(function (selectedPalettes) {
                     $controller.model.selectedPalettes = selectedPalettes;
                     getSelectedPalettesView();
-                },
-                angular.noop
-            );
+                    updateViewAfterPaletteSelection();
+                }
+            ).catch(angular.noop);
         };
 
         function getPaletteId(palette) {
@@ -483,9 +621,10 @@ app.controller('PaletteController',
             }
             var palettesIds = $controller.model.selectedPalettes.map(getPaletteId).join();
 
-            $http.get(palettePath + selectedPaletteViewPath +'/'+ palettesIds
-            ).then(function(response) {
-                if ( response.status === HttpCodes.success ) {
+            $http.get(palettePath + selectedPaletteViewPath + '/' + palettesIds
+            ).then(function (response) {
+                if (response.status === HttpCodes.success) {
+                    changeCurrentSnapshots(response.data.rows);
                     $controller.model.palettesView = response.data;
                     replaceByChanges();
                 } else {
@@ -496,15 +635,23 @@ app.controller('PaletteController',
             });
         }
 
+        function changeCurrentSnapshots(responseDataRows) {
+            responseDataRows.forEach(function(row) {
+                row.snapshots.forEach(function (snapshot) {
+                    changesService.changePaletteVariableSnapshot(snapshot);
+                });
+            });
+        }
+
         function replaceByChanges() {
             var changes = changesService.getChanges()[variableSaveChangesPath];
             if (changes) {
-                changes.forEach(function(changeElement, changeIndex) {
+                changes.forEach(function (changeElement, changeIndex) {
                     matchedSnapshots = filterSnapshotsByPalettes($controller.model.selectedPalettes, changeElement.snapshots);
 
                     if (matchedSnapshots.length > 0) {
-                        var found = false
-                        $controller.model.palettesView.rows.forEach(function(dataElement, dataIndex) {
+                        var found = false;
+                        $controller.model.palettesView.rows.forEach(function (dataElement, dataIndex) {
                             if (compareVariableViews(changeElement, dataElement)) {
                                 $controller.model.palettesView.rows[dataIndex].snapshots = matchedSnapshots;
                                 found = true;
@@ -525,7 +672,7 @@ app.controller('PaletteController',
         function filterSnapshotsByPalettes(palettes, snapshots) {
             var result = [];
             var selectedPalettesIds = $controller.model.selectedPalettes.map(getPaletteId);
-            snapshots.forEach(function(snapshot, index) {
+            snapshots.forEach(function (snapshot, index) {
                 if (selectedPalettesIds.indexOf(snapshot.paletteId) >= 0) {
                     result.push(snapshot);
                 }
@@ -533,7 +680,16 @@ app.controller('PaletteController',
             return result;
         }
 
-        $controller.getSnapshot = function(paletteId, snapshots) {
+        function updateViewAfterPaletteSelection() {
+            var head = document.getElementById("table-head");
+            var body = document.getElementById("table-body");
+
+            body.addEventListener("scroll", function (e) {
+                head.scrollLeft = body.scrollLeft;
+            });
+        }
+
+        $controller.getSnapshot = function (paletteId, snapshots) {
             return getSnapshot(paletteId, snapshots);
         };
 
@@ -545,16 +701,36 @@ app.controller('PaletteController',
                 },
                 compareVariableViews,
                 mergeVariableViews,
-                function(element) {
+                function (element) {
                     return 'VariableView - id: ' + element.variable.id + ' name: ' + element.variable.name;
                 });
         };
+
+        $controller.focusOnElement = function(type, variableId, paletteId) {
+            changesService.removeChangesToShow(variableId, paletteId, type);
+        };
+
+        $controller.removeFocusFromElement = function(type, variableId, paletteId) {
+            var changes = changesService.getChanges()[variableSaveChangesPath];
+            if (!changes) {
+                return;
+            }
+            changes.forEach(function(change) {
+                change.snapshots.forEach(function (snapshot) {
+                    if (snapshot.paletteId === paletteId && snapshot.variableId === variableId &&
+                        snapshot[type] !== changesService.getVariableValueBySnapshotAndName(snapshot, type)) {
+                        changesService.addChangesToShow(variableId, paletteId, type);
+                    }
+                });
+            });
+        };
+
     }
 );
 
 function getSnapshot(paletteId, snapshots) {
     var result = null;
-    snapshots.forEach(function(snapshot, index) {
+    snapshots.forEach(function (snapshot, index) {
         if (snapshot.paletteId == paletteId) {
             result = snapshot;
         }
@@ -563,15 +739,18 @@ function getSnapshot(paletteId, snapshots) {
 }
 
 function compareVariableViews(left, right) {
-    return left === right || left.variable.name == right.variable.name;
+    if (left.variable && right.variable) {
+        return left === right || left.variable.name == right.variable.name;
+    }
+    return false;
 }
 
 function mergeVariableViews(oldValue, newValue) {
-    newValue.snapshots.forEach(function(element2){
-        var isEquals = oldValue.snapshots.some(function(element1){
+    newValue.snapshots.forEach(function (element2) {
+        var isEquals = oldValue.snapshots.some(function (element1) {
             return element1.paletteId === element2.paletteId;
         });
-        if(!isEquals){
+        if (!isEquals) {
             oldValue.snapshots.push(element2);
         }
     });

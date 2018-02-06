@@ -1,10 +1,10 @@
-package com.devexperts.chameleon.util;
+package com.devexperts.chameleon.dto;
 
 /*-
  * #%L
  * Chameleon. Color Palette Management Tool
  * %%
- * Copyright (C) 2016 - 2017 Devexperts, LLC
+ * Copyright (C) 2016 - 2018 Devexperts, LLC
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -22,20 +22,28 @@ package com.devexperts.chameleon.util;
  * #L%
  */
 
-import com.google.common.collect.ImmutableList;
-import org.junit.Assert;
-import org.junit.Test;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.List;
-import java.util.Map;
+public class VariableSnapshotViewDTO {
 
-public class ConverterUtilsTest {
+	private final VariableDTO variable;
 
-	@Test
-	public void testToSameValueMap() {
-		List<String> list = ImmutableList.of("aaa", "bbb", "ccc");
-		Map<String, String> stringMap = list.stream().collect(ConverterUtils.toSameValueMap(entry -> entry.substring(0, 1)));
-		Assert.assertTrue(stringMap.keySet().containsAll(ImmutableList.of("a", "b", "c")));
-		Assert.assertTrue(stringMap.values().containsAll(ImmutableList.of("aaa", "bbb", "ccc")));
+	private final VariableSnapshotDTO snapshot;
+
+	@JsonCreator
+	public VariableSnapshotViewDTO(
+			@JsonProperty("variable") VariableDTO variable,
+			@JsonProperty("snapshot") VariableSnapshotDTO snapshot) {
+		this.variable = variable;
+		this.snapshot = snapshot;
+	}
+
+	public VariableDTO getVariable() {
+		return variable;
+	}
+
+	public VariableSnapshotDTO getSnapshot() {
+		return snapshot;
 	}
 }

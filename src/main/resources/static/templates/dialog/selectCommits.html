@@ -2,7 +2,7 @@
  * #%L
  * Chameleon. Color Palette Management Tool
  * %%
- * Copyright (C) 2016 - 2017 Devexperts, LLC
+ * Copyright (C) 2016 - 2018 Devexperts, LLC
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -21,15 +21,15 @@
 -->
 
 <div class="modal-header">
-	<h3 class="modal-title" id="select-palettes-modal-title">Show Diff</h3>
+	<h4 class="modal-title" id="select-palettes-modal-title"><b>Show Diff</b></h4>
 </div>
-<div class="modal-body" id="select-palettes-modal-body">
+<div class="modal-body select-palettes-modal-body" id="select-palettes-modal-body">
 	<label>From</label>
 	<select class="form-control select-source-palette" ng-model="$controller.fromCommit" ng-options="o.updateTime + ' - ' + o.id for o in $controller.commits"></select>
 	<label>To</label>
 	<select class="form-control select-source-palette" ng-model="$controller.toCommit" ng-options="o.updateTime + ' - ' + o.id for o in $controller.commits"></select>
 </div>
 <div class="modal-footer">
-	<button class="btn btn-default" type="button" ng-click="$controller.cancel()">Cancel</button>
-	<button class="btn btn-info" type="button" ng-click="$controller.save()">Save</button>
+	<button class="btn btn-secondary" type="button" ng-click="$controller.cancel()">Cancel</button>
+	<button class="btn btn-primary" type="button" ng-click="$controller.save()">Save</button>
 </div>

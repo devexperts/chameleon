@@ -4,7 +4,7 @@ package com.devexperts.chameleon.web.controller;
  * #%L
  * Chameleon. Color Palette Management Tool
  * %%
- * Copyright (C) 2016 - 2017 Devexperts, LLC
+ * Copyright (C) 2016 - 2018 Devexperts, LLC
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -61,6 +61,8 @@ public class VariableSnapshotController {
 
     public static final String VIEW_PATH = "view";
 
+    public static final String SNAPSHOTS_BY_COMMIT_PATH = "commit";
+
     public static final String DELETE_VARIABLE_PATH = "deletevariable";
 
     private final VariableSnapshotService variableSnapshotService;
@@ -113,6 +115,16 @@ public class VariableSnapshotController {
     @RequestMapping(path = VIEW_PATH, method = GET)
     public ResponseEntity<?> getVariableSnapshotViewForAddVariable() {
         return new ResponseEntity<>(variableSnapshotService.buildVariableSnapshotView(null), HttpStatus.OK);
+    }
+
+    /**
+     * Get all variable snapshots by commit id
+     *
+     * @return {@link com.devexperts.chameleon.dto.VariableViewDTO}
+     */
+    @RequestMapping(path = SNAPSHOTS_BY_COMMIT_PATH + "/{commitId}", method = GET)
+    public ResponseEntity<?> getAllVariableSnapshotsByCommitId(@PathVariable("commitId") Long commitId) {
+        return new ResponseEntity<>(variableSnapshotService.findAllByCommitId(commitId), HttpStatus.OK);
     }
 
     /**

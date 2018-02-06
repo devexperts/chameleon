@@ -2,7 +2,7 @@
  * #%L
  * Chameleon. Color Palette Management Tool
  * %%
- * Copyright (C) 2016 - 2017 Devexperts, LLC
+ * Copyright (C) 2016 - 2018 Devexperts, LLC
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -20,8 +20,17 @@
  * #L%
  */
 
+
+
 .header-with-padding-right {
     padding-right: 30px;
+}
+
+body {
+    margin-top: 106px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-width: 1440px;
 }
 
 th {
@@ -88,6 +97,7 @@ th {
 
 .select-source-palette {
     width: 200px;
+    margin: 0 auto 5px;
 }
 
 .gly-rotate-270-flip-vertical {
@@ -97,10 +107,6 @@ th {
     -ms-transform: scale(1, -1) rotate(270deg);
     -o-transform: scale(1, -1) rotate(270deg);
     transform: scale(1, -1) rotate(270deg);
-}
-
-.fixed-column-usage-width {
-    width: 200px;
 }
 
 .fixed-column-variable-width {
@@ -116,4 +122,213 @@ th {
     -ms-transform: scale(1.5, 1.5);
     -o-transform: scale(1.5, 1.5);
     transform: scale(1.5, 1.5);
+}
+
+.header-button {
+    height: 32px;
+    border-radius: 3px;
+    background-color: #ffffff;
+    border: solid 1px #cccccc;
+    float: left;
+    margin-left: 15px;
+}
+
+.header-item {
+    margin-left: 15px;
+    float: left;
+}
+
+.header-item button {
+    margin-top: 8px;
+}
+
+.header-item .header-selected-palettes {
+    margin-top: 15px;
+}
+
+.table-header-item {
+    padding: 0 !important;
+    margin-top: 15px;
+    float: left;
+    font-weight: bold;
+}
+
+@media (min-width: 550px) {
+
+    .container-scroll-auto {
+        white-space: nowrap;
+        overflow-x: auto;
+    }
+
+    .container-scroll-auto > .row {
+        white-space: nowrap;
+    }
+
+    .container-scroll-auto > .row > .col-xs-3 {
+        display: inline-block;
+        float: none;
+    }
+
+    .container-scroll > .row {
+        overflow-x: hidden;
+        white-space: nowrap;
+    }
+    .container-scroll > .row > .col-xs-3 {
+        display: inline-block;
+        float: none;
+    }
+}
+
+.container-scroll > .row > .col-xs-3 {
+    font-weight: bold;
+}
+
+.table-body-item {
+    padding: 0 !important;
+    margin-top: 15px;
+    float: left;
+}
+
+.container-scroll-auto {
+    white-space: nowrap;
+    overflow-x: auto;
+    overflow-y: auto;
+    min-width: 1440px;
+    height: 100%;
+}
+
+.variable {
+    margin-right: 10px;
+    width: 210px;
+    word-wrap: break-word;
+    white-space: normal;
+    -moz-hyphens: auto;
+    -webkit-hyphens: auto;
+    -ms-hyphens: auto;
+}
+
+.usage {
+    margin-right: 10px;
+    width: 120px;
+    word-wrap: break-word;
+    white-space: normal;
+    -moz-hyphens: auto;
+    -webkit-hyphens: auto;
+    -ms-hyphens: auto;
+}
+
+.container-header {
+    padding-left: 38px;
+}
+
+.navbar-header {
+    margin-top: 51px;
+    min-width: 1440px;
+}
+
+.row-header {
+    padding-left: 12px;
+}
+
+.color-container {
+    margin-top: -1px;
+}
+
+.col-save {
+    margin-top: 10px;
+}
+
+.navbar-header-menu {
+    padding-left: 20px;
+    padding-right: 20px;
+    min-width: 1440px;
+}
+
+.navbar-header {
+    margin-top: 51px;
+    min-width: 1440px;
+}
+
+.container-table-header {
+    padding-left: 38px;
+}
+
+.row-padding {
+    padding-left: 12px;
+}
+
+.color-container {
+    margin-top: -1px;
+}
+
+.col-margin {
+    margin-top: 10px;
+}
+
+.scrollable {
+    height: 100%;
+}
+
+html {
+    height: calc(100% - 108px);
+}
+
+.remove-modal-header {
+    margin: 20px auto;
+    width: 80%;
+    text-align: center;
+}
+
+.remove-model-buttons {
+    margin-bottom: 20px;
+}
+
+.modal-sm {
+    width: 359px;
+    height: 208px;
+}
+
+.palette-menu-item {
+    padding-right: 15px;
+}
+
+.select-palettes-modal-body {
+    text-align: center;
+    margin: 0 auto;
+}
+
+.loading {
+    margin-top: 5px;
+}
+
+.input-validation-error {
+    background-color: #e8b8b8
+}
+
+.input-data-changed {
+    background-color: #ffe8ca
+}
+
+.input-default {
+    background-color: white;
+}
+
+#table-body {
+    background-color: white;
+}
+
+.page-loader {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 400px;
+    height: 300px;
+    margin-top: -150px;
+    margin-left: -200px;
+}
+
+.alerts {
+    float: left;
+    position: fixed;
+    right: 5px;
 }

@@ -4,7 +4,7 @@ package com.devexperts.chameleon.service;
  * #%L
  * Chameleon. Color Palette Management Tool
  * %%
- * Copyright (C) 2016 - 2017 Devexperts, LLC
+ * Copyright (C) 2016 - 2018 Devexperts, LLC
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -134,7 +134,7 @@ public class ConfluenceImportPaletteService {
 			if (!CollectionUtils.isEmpty(headers)) {
 				table.select(TABLE_TR).stream()
 						.map(row -> row.select(TABLE_TD))
-						.filter(cols -> cols.size() > 0)
+						.filter(cols -> cols.size() > 1)
 						.forEach(cols -> {
 							String names = cols.get(headers.get(configuration.getUsageParseField())).text();
 							String color = cols.get(headers.get(configuration.getValueParseField())).text();
